@@ -23,116 +23,140 @@ class GameScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [LudoColors.darkNavyDark, LudoColors.darkNavy],
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        final shouldPop = await showDialog<bool>(
+          context: context,
+          builder: (context) => _buildExitDialog(context),
+        );
+        if (shouldPop ?? false) {
+          if (context.mounted) {
+            Navigator.of(context).pop();
+          }
+        }
+      },
+      child: Scaffold(
+        body: Container(
+          width: double.infinity,
+          height: double.infinity,
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [LudoColors.darkNavyDark, LudoColors.darkNavy],
+            ),
           ),
-        ),
-        child: BlocBuilder<GameBloc, GameState>(
-          builder: (context, state) {
-            if (state.players.isEmpty) {
-              return const SafeArea(
-                child: Center(
-                  child: CircularProgressIndicator(
-                    color: LudoColors.brightBlue,
-                  ),
-                ),
-              );
-            }
-
-            return Stack(
-              children: [
-                SafeArea(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: LudoDimensions.spacing16,
-                      vertical: LudoDimensions.spacing8,
+          child: BlocListener<GameBloc, GameState>(
+            listenWhen: (previous, current) => !previous.isGameOver && current.isGameOver,
+            listener: (context, state) {
+              SoundManager().playSound(SoundType.victory);
+            },
+            child: BlocBuilder<GameBloc, GameState>(
+              builder: (context, state) {
+                if (state.players.isEmpty) {
+                  return const SafeArea(
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        color: LudoColors.brightBlue,
+                      ),
                     ),
-                    child: Column(
-                      children: [
-                        // Top Bar
-                        _buildTopBar(context),
-                        const Spacer(),
+                  );
+                }
 
-                        // Top Players Indicators (0 and 1)
-                        PlayerIndicators(
-                          players: state.players,
-                          currentPlayerIndex: state.currentPlayerIndex,
-                          leftIndex: 0,
-                          rightIndex: 1,
-                        ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.1),
+                return Stack(
+                  children: [
+                    SafeArea(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: LudoDimensions.spacing16,
+                          vertical: LudoDimensions.spacing8,
+                        ),
+                        child: Column(
+                          children: [
+                            // Top Bar
+                            _buildTopBar(context),
+                            const Spacer(),
 
-                        const SizedBox(height: LudoDimensions.spacing16),
+                            // Top Players Indicators (0 and 1)
+                            PlayerIndicators(
+                              players: state.players,
+                              currentPlayerIndex: state.currentPlayerIndex,
+                              leftIndex: 0,
+                              rightIndex: 1,
+                            ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.1),
 
-                        // Game Board Container
-                        Center(
-                          child: ConstrainedBox(
-                            constraints: const BoxConstraints(
-                              maxWidth: _maxContentWidth,
-                            ),
-                            child: AspectRatio(
-                              aspectRatio: 1.0,
-                              child: BoardContainer(
-                                child: GameBoard(
-                                  players: state.players,
-                                  currentPlayerIndex: state.currentPlayerIndex,
-                                  validTokens: state.validTokens,
-                                  captureEffect: state.captureEffect,
+                            const SizedBox(height: LudoDimensions.spacing16),
+
+                            // Game Board Container
+                            Center(
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(
+                                  maxWidth: _maxContentWidth,
+                                ),
+                                child: AspectRatio(
+                                  aspectRatio: 1.0,
+                                  child: BoardContainer(
+                                    child: GameBoard(
+                                      players: state.players,
+                                      currentPlayerIndex: state.currentPlayerIndex,
+                                      validTokens: state.validTokens,
+                                      captureEffect: state.captureEffect,
+                                    ),
+                                  ),
                                 ),
                               ),
-                            ),
-                          ),
-                        ).animate().fadeIn(duration: 500.ms).scale(begin: const Offset(0.95, 0.95)),
+                            ).animate().fadeIn(duration: 500.ms).scale(begin: const Offset(0.95, 0.95)),
 
-                        const SizedBox(height: LudoDimensions.spacing16),
+                            const SizedBox(height: LudoDimensions.spacing16),
 
-                        // Bottom Players Indicators (3 and 2)
-                        PlayerIndicators(
-                          players: state.players,
-                          currentPlayerIndex: state.currentPlayerIndex,
-                          leftIndex: 3,
-                          rightIndex: 2,
-                        ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1),
+                            // Bottom Players Indicators (3 and 2)
+                            PlayerIndicators(
+                              players: state.players,
+                              currentPlayerIndex: state.currentPlayerIndex,
+                              leftIndex: 3,
+                              rightIndex: 2,
+                            ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1),
 
-                        const Spacer(),
+                            const Spacer(),
 
-                        // Turn Indicator Banner
-                        TurnIndicator(
-                          playerIndex: state.currentPlayerIndex,
-                          playerColor: state.currentPlayerIndex < state.players.length
-                              ? state.players[state.currentPlayerIndex].color
-                              : LudoColors.purple,
-                          isGameOver: state.isGameOver,
-                        )
-                            .animate()
-                            .fadeIn(duration: 300.ms)
-                            .shimmer(delay: 500.ms, duration: 1000.ms, color: LudoColors.mintGreen.withValues(alpha: 0.3)),
+                            // Turn Indicator Banner
+                            TurnIndicator(
+                              playerIndex: state.currentPlayerIndex,
+                              playerName: state.currentPlayerIndex < state.players.length
+                                  ? state.players[state.currentPlayerIndex].name
+                                  : 'Player ${state.currentPlayerIndex + 1}',
+                              playerColor: state.currentPlayerIndex < state.players.length
+                                  ? state.players[state.currentPlayerIndex].color
+                                  : LudoColors.purple,
+                              isGameOver: state.isGameOver,
+                            )
+                                .animate()
+                                .fadeIn(duration: 300.ms)
+                                .shimmer(delay: 500.ms, duration: 1000.ms, color: LudoColors.mintGreen.withValues(alpha: 0.3)),
 
-                        const SizedBox(height: LudoDimensions.spacing16),
+                            const SizedBox(height: LudoDimensions.spacing16),
 
-                        // Large Central Dice
-                        _buildCentralDice(context, state),
+                            // Large Central Dice
+                            _buildCentralDice(context, state),
 
-                        const Spacer(),
-                      ],
+                            const Spacer(),
+                          ],
+                        ),
+                      ),
                     ),
-                  ),
-                ),
 
-                // Game Over Overlay
-                if (state.isGameOver)
-                  _buildGameOverOverlay(context, state)
-                      .animate()
-                      .fadeIn(duration: 500.ms),
-              ],
-            );
-          },
+                    // Game Over Overlay
+                    if (state.isGameOver)
+                      _buildGameOverOverlay(context, state)
+                          .animate()
+                          .fadeIn(duration: 500.ms),
+                  ],
+                );
+              },
+            ),
+          ),
         ),
       ),
     );
@@ -143,12 +167,16 @@ class GameScreen extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         IconButton(
-          onPressed: () {
-            // Confirm exit dialog
-            showDialog(
+          onPressed: () async {
+            final shouldPop = await showDialog<bool>(
               context: context,
               builder: (context) => _buildExitDialog(context),
             );
+            if (shouldPop == true) {
+              if (context.mounted) {
+                Navigator.pop(context);
+              }
+            }
           },
           icon: const Icon(Icons.arrow_back_ios, color: LudoColors.textLight),
         ),
@@ -239,7 +267,7 @@ class GameScreen extends StatelessWidget {
               children: [
                 Expanded(
                   child: TextButton(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () => Navigator.pop(context, false),
                     child: Text(
                       'Cancel',
                       style: LudoTextStyles.labelSmall.copyWith(
@@ -254,8 +282,7 @@ class GameScreen extends StatelessWidget {
                   child: GradientButton(
                     label: 'Quit',
                     onPressed: () {
-                      Navigator.pop(context); // Close dialog
-                      Navigator.pop(context); // Exit Game Screen
+                      Navigator.pop(context, true);
                     },
                     colors: const [LudoColors.redToken, Color(0xFFC0392B)],
                   ),
@@ -270,149 +297,264 @@ class GameScreen extends StatelessWidget {
 
   Widget _buildGameOverOverlay(BuildContext context, GameState state) {
     final duration = DateTime.now().difference(state.startTime ?? DateTime.now());
-    final activePlayerIndex = state.currentPlayerIndex;
-    final winnerColor = activePlayerIndex < state.players.length
-        ? state.players[activePlayerIndex].color
-        : LudoColors.mintGreen;
 
-    // Trigger victory sound (we can just call the sound manager here, since build is called once when state updates)
-    SoundManager().playSound(SoundType.victory);
+    // Build ranked player list from state.finishOrder
+    final List<_PlayerRanking> rankings = [];
+    for (var i = 0; i < state.finishOrder.length; i++) {
+      final playerId = state.finishOrder[i];
+      final p = state.players.firstWhere((player) => player.id == playerId, orElse: () => state.players[0]);
+      rankings.add(_PlayerRanking(
+        rank: i + 1,
+        name: p.name,
+        color: p.color,
+      ));
+    }
+    final unfinished = state.players.where((p) => !state.finishOrder.contains(p.id)).toList();
+    for (final p in unfinished) {
+      rankings.add(_PlayerRanking(
+        rank: rankings.length + 1,
+        name: p.name,
+        color: p.color,
+      ));
+    }
+
+    final winnerColor = rankings.isNotEmpty ? rankings.first.color : LudoColors.mintGreen;
+    final winnerName = rankings.isNotEmpty ? rankings.first.name : 'Winner';
 
     return Container(
       width: double.infinity,
       height: double.infinity,
       color: Colors.black.withValues(alpha: 0.85),
       child: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(LudoDimensions.spacing24),
-          child: GlassMorphism(
-            opacity: 0.1,
-            blur: 20,
-            borderRadius: BorderRadius.circular(LudoDimensions.radius24),
-            padding: const EdgeInsets.all(LudoDimensions.spacing32),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Cup icon with glowing animations
-                Container(
-                  width: 96,
-                  height: 96,
-                  decoration: BoxDecoration(
-                    color: winnerColor.withValues(alpha: 0.15),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: winnerColor, width: 2),
-                    boxShadow: [
-                      BoxShadow(
-                        color: winnerColor.withValues(alpha: 0.3),
-                        blurRadius: 24,
-                        spreadRadius: 4,
-                      ),
-                    ],
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(LudoDimensions.spacing24),
+            child: GlassMorphism(
+              opacity: 0.1,
+              blur: 20,
+              borderRadius: BorderRadius.circular(LudoDimensions.radius24),
+              padding: const EdgeInsets.all(LudoDimensions.spacing24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Cup icon with glowing animations
+                  Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color: winnerColor.withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: winnerColor, width: 2),
+                      boxShadow: [
+                        BoxShadow(
+                          color: winnerColor.withValues(alpha: 0.3),
+                          blurRadius: 24,
+                          spreadRadius: 4,
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.emoji_events,
+                      color: LudoColors.gold,
+                      size: 40,
+                    ),
+                  )
+                      .animate(onPlay: (controller) => controller.repeat(reverse: true))
+                      .scale(begin: const Offset(1, 1), end: const Offset(1.08, 1.08), duration: 800.ms)
+                      .shimmer(duration: 1500.ms, color: Colors.white),
+
+                  const SizedBox(height: 16),
+
+                  Text(
+                    'VICTORY!',
+                    style: LudoTextStyles.displayMedium.copyWith(
+                      color: winnerColor,
+                      letterSpacing: 2.0,
+                      fontSize: 28,
+                    ),
+                  ).animate().scale(delay: 200.ms, duration: 400.ms, curve: Curves.bounceOut),
+
+                  const SizedBox(height: 8),
+
+                  Text(
+                    '$winnerName takes the crown!',
+                    textAlign: TextAlign.center,
+                    style: LudoTextStyles.headlineSmall.copyWith(
+                      color: LudoColors.textLight,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 18,
+                    ),
                   ),
-                  child: Icon(
-                    Icons.emoji_events,
-                    color: winnerColor,
-                    size: 48,
+
+                  const SizedBox(height: 20),
+
+                  // Leaderboard
+                  Text(
+                    'FINAL STANDINGS',
+                    style: LudoTextStyles.labelSmall.copyWith(
+                      color: LudoColors.textMedium,
+                      letterSpacing: 1.5,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                )
-                    .animate(onPlay: (controller) => controller.repeat(reverse: true))
-                    .scale(begin: const Offset(1, 1), end: const Offset(1.08, 1.08), duration: 800.ms)
-                    .shimmer(duration: 1500.ms, color: Colors.white),
-
-                const SizedBox(height: 24),
-
-                Text(
-                  'VICTORY!',
-                  style: LudoTextStyles.displayMedium.copyWith(
-                    color: winnerColor,
-                    letterSpacing: 2.0,
-                  ),
-                ).animate().scale(delay: 200.ms, duration: 400.ms, curve: Curves.bounceOut),
-
-                const SizedBox(height: 12),
-
-                Text(
-                  'Player ${activePlayerIndex + 1} takes the crown!',
-                  textAlign: TextAlign.center,
-                  style: LudoTextStyles.headlineSmall.copyWith(
-                    color: LudoColors.textLight,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-
-                const SizedBox(height: 24),
-
-                // Stats row
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.05),
-                    borderRadius: BorderRadius.circular(LudoDimensions.radius16),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      Column(
-                        children: [
-                          Text(
-                            'TIME',
-                            style: LudoTextStyles.labelSmall.copyWith(color: LudoColors.textMedium),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '${duration.inMinutes}m ${duration.inSeconds % 60}s',
-                            style: LudoTextStyles.bodyLarge.copyWith(
-                              color: LudoColors.textLight,
-                              fontWeight: FontWeight.bold,
+                  const SizedBox(height: 8),
+                  Container(
+                    constraints: const BoxConstraints(maxHeight: 220),
+                    child: ListView.separated(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: rankings.length,
+                      separatorBuilder: (context, index) => const SizedBox(height: 8),
+                      itemBuilder: (context, index) {
+                        final rank = rankings[index];
+                        final isWinner = rank.rank == 1;
+                        return Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: isWinner
+                                ? rank.color.withValues(alpha: 0.12)
+                                : Colors.white.withValues(alpha: 0.04),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: isWinner
+                                  ? rank.color.withValues(alpha: 0.3)
+                                  : Colors.white.withValues(alpha: 0.05),
                             ),
                           ),
-                        ],
-                      ),
-                      Container(
-                        width: 1,
-                        height: 32,
-                        color: Colors.white.withValues(alpha: 0.1),
-                      ),
-                      Column(
-                        children: [
-                          Text(
-                            'REWARD',
-                            style: LudoTextStyles.labelSmall.copyWith(color: LudoColors.textMedium),
-                          ),
-                          const SizedBox(height: 4),
-                          Row(
+                          child: Row(
                             children: [
-                              const Icon(Icons.monetization_on, color: LudoColors.gold, size: 18),
-                              const SizedBox(width: 4),
-                              Text(
-                                '+500',
-                                style: LudoTextStyles.bodyLarge.copyWith(
-                                  color: LudoColors.gold,
-                                  fontWeight: FontWeight.bold,
+                              // Rank Medal / Number
+                              Container(
+                                width: 28,
+                                height: 28,
+                                decoration: BoxDecoration(
+                                  color: isWinner
+                                      ? rank.color.withValues(alpha: 0.25)
+                                      : Colors.transparent,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    '${rank.rank}',
+                                    style: TextStyle(
+                                      color: isWinner ? rank.color : LudoColors.textMedium,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                    ),
+                                  ),
                                 ),
                               ),
+                              const SizedBox(width: 12),
+                              // Player Name
+                              Expanded(
+                                child: Text(
+                                  rank.name,
+                                  style: LudoTextStyles.bodyLarge.copyWith(
+                                    fontWeight: isWinner ? FontWeight.bold : FontWeight.w500,
+                                    color: isWinner ? Colors.white : LudoColors.textLight,
+                                  ),
+                                ),
+                              ),
+                              // Status icon/trophy
+                              if (isWinner)
+                                const Icon(Icons.emoji_events, color: LudoColors.gold, size: 20)
+                              else if (rank.rank <= state.finishOrder.length)
+                                const Icon(Icons.check_circle_outline, color: LudoColors.mintGreen, size: 20)
+                              else
+                                const Icon(Icons.hourglass_empty, color: LudoColors.textMedium, size: 18),
                             ],
                           ),
-                        ],
-                      ),
-                    ],
+                        );
+                      },
+                    ),
                   ),
-                ),
 
-                const SizedBox(height: 32),
+                  const SizedBox(height: 20),
 
-                GradientButton(
-                  label: 'PLAY AGAIN',
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  colors: const [LudoColors.purple, LudoColors.purpleLight],
-                ),
-              ],
+                  // Stats row
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.05),
+                      borderRadius: BorderRadius.circular(LudoDimensions.radius16),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        Column(
+                          children: [
+                            Text(
+                              'TIME',
+                              style: LudoTextStyles.labelSmall.copyWith(color: LudoColors.textMedium),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '${duration.inMinutes}m ${duration.inSeconds % 60}s',
+                              style: LudoTextStyles.bodyLarge.copyWith(
+                                color: LudoColors.textLight,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Container(
+                          width: 1,
+                          height: 32,
+                          color: Colors.white.withValues(alpha: 0.1),
+                        ),
+                        Column(
+                          children: [
+                            Text(
+                              'REWARD',
+                              style: LudoTextStyles.labelSmall.copyWith(color: LudoColors.textMedium),
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                const Icon(Icons.monetization_on, color: LudoColors.gold, size: 18),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '+500',
+                                  style: LudoTextStyles.bodyLarge.copyWith(
+                                    color: LudoColors.gold,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  GradientButton(
+                    label: 'PLAY AGAIN',
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    colors: const [LudoColors.purple, LudoColors.purpleLight],
+                  ),
+                ],
+              ),
             ),
           ),
         ),
       ),
     );
   }
+}
+
+class _PlayerRanking {
+  final int rank;
+  final String name;
+  final Color color;
+
+  const _PlayerRanking({
+    required this.rank,
+    required this.name,
+    required this.color,
+  });
 }

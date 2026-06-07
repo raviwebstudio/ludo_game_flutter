@@ -8,6 +8,8 @@ class Player extends Equatable {
   final String name;
   final List<Token> tokens;
   final List<BoardPosition> path;
+  final bool hasFinished;
+  final int finishRank;
 
   const Player({
     required this.id,
@@ -15,6 +17,8 @@ class Player extends Equatable {
     this.name = '',
     required this.tokens,
     required this.path,
+    this.hasFinished = false,
+    this.finishRank = 0,
   });
 
   Player copyWith({
@@ -23,6 +27,8 @@ class Player extends Equatable {
     String? name,
     List<Token>? tokens,
     List<BoardPosition>? path,
+    bool? hasFinished,
+    int? finishRank,
   }) {
     return Player(
       id: id ?? this.id,
@@ -30,6 +36,8 @@ class Player extends Equatable {
       name: name ?? this.name,
       tokens: tokens ?? this.tokens,
       path: path ?? this.path,
+      hasFinished: hasFinished ?? this.hasFinished,
+      finishRank: finishRank ?? this.finishRank,
     );
   }
 
@@ -44,19 +52,23 @@ class Player extends Equatable {
       path: (json['path'] as List<dynamic>)
           .map((value) => BoardPosition.fromJson(value as Map<String, dynamic>))
           .toList(),
+      hasFinished: (json['hasFinished'] as bool?) ?? false,
+      finishRank: (json['finishRank'] as int?) ?? 0,
     );
   }
 
   Map<String, dynamic> toJson() => {
         'id': id,
         'color': color.toARGB32(),
-      'name': name,
+        'name': name,
         'tokens': tokens.map((token) => token.toJson()).toList(),
         'path': path.map((position) => position.toJson()).toList(),
+        'hasFinished': hasFinished,
+        'finishRank': finishRank,
       };
 
   @override
-  List<Object?> get props => [id, color, name, tokens, path];
+  List<Object?> get props => [id, color, name, tokens, path, hasFinished, finishRank];
 }
 
 class Token extends Equatable {

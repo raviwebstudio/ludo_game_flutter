@@ -1,16 +1,15 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import '../../../core/constants/colors.dart';
+import '../../../core/services/player_prefs.dart';
 import '../../../domain/models/player.dart';
 import '../../../domain/models/board_position.dart';
 import '../../../domain/services/safe_zones.dart';
 import '../../../presentation/bloc/game_bloc.dart';
 
-/// A dark‑themed board painter matching the Ludo Elite reference designs.
+/// A board painter matching the Ludo Elite reference designs with support for custom themes.
 ///
-/// Uses the same 15×15 coordinate system as the original [BoardPainter],
-/// but renders with a premium dark aesthetic: dark board background, coloured
-/// quadrant homes with rounded slots, 3‑D sphere tokens, and glowing effects.
+/// Theme options: Neon Dark, Classic Board, Royal Gold.
 class ModernBoardPainter extends CustomPainter {
   final List<Player> players;
   final int currentPlayerIndex;
@@ -45,30 +44,51 @@ class ModernBoardPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final cellSize = size.width / 15;
 
-    _drawBackground(canvas, size, cellSize);
-    _drawPlayerHomes(canvas, size, cellSize);
-    _drawCenterPaths(canvas, size, cellSize);
-    _drawHomeStretch(canvas, size, cellSize);
+    // Load active board theme
+    final theme = PlayerPrefs.boardTheme;
+    final isClassic = theme == 'Classic Board';
+    final isGold = theme == 'Royal Gold';
+
+    // Theme values
+    final boardBg = isClassic
+        ? const Color(0xFFF2F4F8)
+        : (isGold ? const Color(0xFF1A1610) : const Color(0xFF1A2233));
+    final gridLineColor = isClassic
+        ? Colors.black.withValues(alpha: 0.1)
+        : (isGold ? const Color(0xFFFFD700).withValues(alpha: 0.15) : Colors.white.withValues(alpha: 0.04));
+    final cellBorderColor = isClassic
+        ? Colors.black.withValues(alpha: 0.12)
+        : (isGold ? const Color(0xFFFFD700).withValues(alpha: 0.2) : Colors.white.withValues(alpha: 0.06));
+    final centerPathBg = isClassic
+        ? Colors.white
+        : (isGold ? const Color(0xFF2C2418) : const Color(0xFF1E2A3E));
+    final homeStretchAlpha = isClassic ? 0.35 : (isGold ? 0.18 : 0.12);
+    final homeBgAlpha = isClassic ? 0.35 : (isGold ? 0.22 : 0.18);
+
+    _drawBackground(canvas, size, cellSize, boardBg, gridLineColor, cellBorderColor);
+    _drawPlayerHomes(canvas, size, cellSize, homeBgAlpha);
+    _drawCenterPaths(canvas, size, cellSize, centerPathBg, cellBorderColor);
+    _drawHomeStretch(canvas, size, cellSize, homeStretchAlpha);
     _drawSafeSpots(canvas, size, cellSize);
     _drawTokens(canvas, size, cellSize);
   }
 
   // ── Background ──────────────────────────────────────────────────────────
 
-  void _drawBackground(Canvas canvas, Size size, double cellSize) {
-    // Dark board background
+  void _drawBackground(Canvas canvas, Size size, double cellSize, Color boardBg, Color gridLineColor, Color cellBorderColor) {
+    // Board background
     final rrect = RRect.fromRectAndRadius(
       Offset.zero & size,
       const Radius.circular(16),
     );
     canvas.drawRRect(
       rrect,
-      Paint()..color = const Color(0xFF1A2233),
+      Paint()..color = boardBg,
     );
 
     // Subtle grid overlay for the path area
     final gridPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.04)
+      ..color = gridLineColor
       ..style = PaintingStyle.stroke
       ..strokeWidth = 0.5;
 
@@ -103,7 +123,7 @@ class ModernBoardPainter extends CustomPainter {
 
   // ── Player Homes ────────────────────────────────────────────────────────
 
-  void _drawPlayerHomes(Canvas canvas, Size size, double cellSize) {
+  void _drawPlayerHomes(Canvas canvas, Size size, double cellSize, double homeBgAlpha) {
     final homeSize = 6 * cellSize;
     final positions = [
       Offset.zero,
@@ -113,7 +133,7 @@ class ModernBoardPainter extends CustomPainter {
     ];
 
     for (var i = 0; i < 4; i++) {
-      _drawModernHome(canvas, positions[i], homeSize, _playerColor(i), i);
+      _drawModernHome(canvas, positions[i], homeSize, _playerColor(i), i, homeBgAlpha);
     }
   }
 
@@ -123,6 +143,7 @@ class ModernBoardPainter extends CustomPainter {
     double size,
     Color color,
     int playerIndex,
+    double homeBgAlpha,
   ) {
     final rect = Rect.fromLTWH(offset.dx, offset.dy, size, size);
     final rr = RRect.fromRectAndRadius(rect, const Radius.circular(12));
@@ -130,7 +151,7 @@ class ModernBoardPainter extends CustomPainter {
     // Background
     canvas.drawRRect(
       rr,
-      Paint()..color = color.withValues(alpha: 0.18),
+      Paint()..color = color.withValues(alpha: homeBgAlpha),
     );
 
     // Border
@@ -142,7 +163,7 @@ class ModernBoardPainter extends CustomPainter {
         ..strokeWidth = 1.5,
     );
 
-    // Inner white box for token slots
+    // Inner box for token slots
     final innerMargin = size * 0.18;
     final innerRect = Rect.fromLTWH(
       offset.dx + innerMargin,
@@ -190,8 +211,8 @@ class ModernBoardPainter extends CustomPainter {
 
   // ── Center Paths ────────────────────────────────────────────────────────
 
-  void _drawCenterPaths(Canvas canvas, Size size, double cellSize) {
-    final pathBg = Paint()..color = const Color(0xFF1E2A3E);
+  void _drawCenterPaths(Canvas canvas, Size size, double cellSize, Color centerPathBg, Color cellBorderColor) {
+    final pathBg = Paint()..color = centerPathBg;
 
     // Vertical path
     canvas.drawRect(
@@ -206,7 +227,7 @@ class ModernBoardPainter extends CustomPainter {
 
     // Path cell borders
     final cellBorder = Paint()
-      ..color = Colors.white.withValues(alpha: 0.06)
+      ..color = cellBorderColor
       ..style = PaintingStyle.stroke
       ..strokeWidth = 0.5;
 
@@ -230,10 +251,10 @@ class ModernBoardPainter extends CustomPainter {
 
   // ── Home Stretch & Center ───────────────────────────────────────────────
 
-  void _drawHomeStretch(Canvas canvas, Size size, double cellSize) {
+  void _drawHomeStretch(Canvas canvas, Size size, double cellSize, double stretchAlpha) {
     final center = Offset(7.5 * cellSize, 7.5 * cellSize);
 
-    // Center triangles (darker muted tones)
+    // Center triangles
     _drawTriangle(
       canvas,
       Offset(6 * cellSize, 6 * cellSize),
@@ -265,13 +286,13 @@ class ModernBoardPainter extends CustomPainter {
 
     // Home stretch coloured paths
     _drawColoredStretch(
-        canvas, 1 * cellSize, 7 * cellSize, 5 * cellSize, cellSize, _playerColor(0));
+        canvas, 1 * cellSize, 7 * cellSize, 5 * cellSize, cellSize, _playerColor(0), stretchAlpha);
     _drawColoredStretch(
-        canvas, 7 * cellSize, 1 * cellSize, cellSize, 5 * cellSize, _playerColor(1));
+        canvas, 7 * cellSize, 1 * cellSize, cellSize, 5 * cellSize, _playerColor(1), stretchAlpha);
     _drawColoredStretch(
-        canvas, 9 * cellSize, 7 * cellSize, 5 * cellSize, cellSize, _playerColor(2));
+        canvas, 9 * cellSize, 7 * cellSize, 5 * cellSize, cellSize, _playerColor(2), stretchAlpha);
     _drawColoredStretch(
-        canvas, 7 * cellSize, 9 * cellSize, cellSize, 5 * cellSize, _playerColor(3));
+        canvas, 7 * cellSize, 9 * cellSize, cellSize, 5 * cellSize, _playerColor(3), stretchAlpha);
   }
 
   void _drawTriangle(
@@ -309,16 +330,17 @@ class ModernBoardPainter extends CustomPainter {
     double w,
     double h,
     Color color,
+    double stretchAlpha,
   ) {
     final rect = Rect.fromLTWH(x, y, w, h);
     canvas.drawRect(
       rect,
-      Paint()..color = color.withValues(alpha: 0.12),
+      Paint()..color = color.withValues(alpha: stretchAlpha),
     );
     canvas.drawRect(
       rect,
       Paint()
-        ..color = color.withValues(alpha: 0.25)
+        ..color = color.withValues(alpha: stretchAlpha * 2.0)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 0.8,
     );

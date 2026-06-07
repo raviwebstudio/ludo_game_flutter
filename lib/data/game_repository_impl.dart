@@ -15,8 +15,8 @@ class GameRepositoryImpl implements GameRepository {
   final List<Color> playerColors = [
     Colors.red,
     Colors.green,
-    Colors.blue,
     Colors.yellow,
+    Colors.blue,
   ];
 
   final Map<int, List<BoardPosition>> _playerPaths = {
@@ -203,9 +203,6 @@ class GameRepositoryImpl implements GameRepository {
       if (playerIndex == currentPlayerIndex) continue;
 
       final opponent = updatedPlayers[playerIndex];
-      if (isBlockade(opponent, landingPosition)) {
-        continue;
-      }
 
       final newTokens = List<Token>.from(opponent.tokens);
       var capturedAnyToken = false;
@@ -277,6 +274,8 @@ class GameRepositoryImpl implements GameRepository {
     BoardPosition position,
     List<Player> players,
   ) {
+    // Safe zones cannot form blockades — any tokens can coexist on stars
+    if (isSafeZone(position)) return true;
     for (final player in players) {
       if (player.id == movingPlayer.id) continue;
       if (isBlockade(player, position)) return false;
@@ -290,6 +289,8 @@ class GameRepositoryImpl implements GameRepository {
     BoardPosition position,
     List<Player> players,
   ) {
+    // Safe zones are always landable regardless of token count
+    if (isSafeZone(position)) return true;
     return canPassBlockade(movingPlayer, position, players);
   }
 

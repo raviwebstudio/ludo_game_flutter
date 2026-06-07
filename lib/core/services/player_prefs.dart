@@ -18,6 +18,11 @@ class PlayerPrefs {
     _prefs = await SharedPreferences.getInstance();
   }
 
+  static const _soundEnabledKey = '${_keyPrefix}sound_enabled';
+  static const _volumeKey = '${_keyPrefix}volume';
+  static const _hapticsEnabledKey = '${_keyPrefix}haptics_enabled';
+  static const _boardThemeKey = '${_keyPrefix}board_theme';
+
   static int get xp => _prefs?.getInt(_xpKey) ?? 0;
   static Future<void> setXp(int value) async {
     await _prefs?.setInt(_xpKey, value);
@@ -53,6 +58,31 @@ class PlayerPrefs {
     await _prefs?.remove(_totalGamesKey);
     await _prefs?.remove(_winsKey);
     await _prefs?.remove(_winStreakKey);
+    _changeController.add(null);
+  }
+
+  // Settings properties
+  static bool get soundEnabled => _prefs?.getBool(_soundEnabledKey) ?? true;
+  static Future<void> setSoundEnabled(bool value) async {
+    await _prefs?.setBool(_soundEnabledKey, value);
+    _changeController.add(null);
+  }
+
+  static double get volume => _prefs?.getDouble(_volumeKey) ?? 1.0;
+  static Future<void> setVolume(double value) async {
+    await _prefs?.setDouble(_volumeKey, value);
+    _changeController.add(null);
+  }
+
+  static bool get hapticsEnabled => _prefs?.getBool(_hapticsEnabledKey) ?? true;
+  static Future<void> setHapticsEnabled(bool value) async {
+    await _prefs?.setBool(_hapticsEnabledKey, value);
+    _changeController.add(null);
+  }
+
+  static String get boardTheme => _prefs?.getString(_boardThemeKey) ?? 'Neon Dark';
+  static Future<void> setBoardTheme(String value) async {
+    await _prefs?.setString(_boardThemeKey, value);
     _changeController.add(null);
   }
 

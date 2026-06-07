@@ -1,103 +1,78 @@
-# 🎮 Ludo Game Built with Flutter
+# 🎮 Ludo Elite (Flutter)
 
-A beautifully designed **Ludo game** that brings the classic board game to life with **Flutter's Material Design**. This project features **smooth animations**, **multiplayer gameplay**, and **responsive controls**, ensuring a fun and engaging experience. It leverages **BLoC (Business Logic Component) state management**, **Dependency Injection**, and **Hive** for efficient data handling, making it a high-quality mobile gaming experience.
-
----
-
-## 📱 Screenshots
-
-_(Include your screenshots here to showcase different game modes, dice rolling, and player movements.)_
+A premium, highly polished Ludo game built with **Flutter** and **BLoC state management**. Renders a modern dark‑themed interface with glassmorphism, responsive controls, and a custom‑painted 3D dice.
 
 ---
 
 ## 🎯 Features
 
-- **Classic Ludo Gameplay**: Enjoy the traditional Ludo game with friends or AI.
-- **Multiplayer Mode**: Challenge your friends in local multiplayer.
-- **BLoC State Management**: Ensures smooth gameplay with structured logic.
-- **Material Design**: Clean and modern UI adhering to Flutter's Material principles.
-- **Animated Dice Roll**: Smooth animations make the gameplay visually appealing.
-- **Turn-Based System**: Manages player turns efficiently to keep the game engaging.
+- **Local Multiplayer**: Play with 2, 3, or 4 players on a single device.
+- **Custom-Painted 3D Dice**: Beautiful, dynamic 3D dice using Flutter's `CustomPaint` engine.
+- **Persistent Stats**: Tracks player XP, levels, total games, wins, win rate, and win streak using SharedPreferences.
+- **Audio & Haptics**: Full audio support for rolls, moves, captures, and victories with persisted toggles.
+- **Dynamic Board Themes**: Swap board designs on the fly between **Neon Dark**, **Classic Board**, and **Royal Gold**.
+- **PopScope System Back Handling**: Confirmation dialog prevents accidental exits from active matches.
+- **BLoC Architecture**: Uses the BLoC pattern for predictable state transitions and scalable codebase.
+- **Dependency Injection**: Integrated with `get_it` for clean service locator setups.
 
 ---
 
 ## 🚀 Technologies Used
 
-- **Flutter**: The cross-platform framework for mobile game development.
-- **Dart**: The programming language used for Flutter apps.
-- **BLoC**: Efficient state management for handling game logic.
-- **Hive**: Fast, lightweight local database for storing game history.
-- **Dependency Injection**: For modular and scalable code structure.
+- **Flutter**: Modern cross-platform framework.
+- **Dart**: Programming language.
+- **flutter_bloc**: State management.
+- **shared_preferences**: Persistence engine for player statistics and configurations.
+- **flutter_animate**: Micro-interactions and transitional animations.
+- **audioplayers**: Sound effects playing.
 
 ---
 
-## 📦 Installation
+## 🛠️ Folder Structure
 
-1. Ensure Flutter is installed. Follow the guide [here](https://docs.flutter.dev/get-started/install).
+```plaintext
+lib/
+├── core/
+│   ├── constants/            # Thematic colors, text styles, and dimensions
+│   ├── services/             # SoundManager, PlayerPrefs, HapticService
+│   └── theme/                # Global MaterialApp AppTheme
+├── data/
+│   └── game_repository_impl.dart # Ludo logic (collisions, path generation, moves)
+├── domain/
+│   ├── models/               # BoardPosition, CaptureResult, Player/Token models
+│   └── services/             # Safe zones definitions
+├── features/
+│   ├── game/                 # GamePlay screens and custom painters/widgets
+│   ├── home/                 # Main Dashboard interface
+│   ├── profile/              # Statistics, XP progress, and profile editing
+│   ├── settings/             # Persistent configurations (sound, volume, haptics, theme)
+│   └── splash/               # Animated splash screen with dynamic particles
+├── presentation/
+│   └── bloc/                 # Core game BLoC (State, Events, Bloc logic)
+├── injection.dart            # Dependency injection configuration
+└── main.dart                 # App initialization and routing
+```
+
+---
+
+## 📦 Installation & Setup
+
+1. Setup the Flutter SDK on your machine ([Flutter installation guide](https://docs.flutter.dev/get-started/install)).
 2. Clone this repository:
    ```bash
-   git clone https://github.com/arpit24sahu/ludo-game.git
+   git clone <repo-url>
    ```
-3. Navigate to the project directory:
-   ```bash
-   cd ludo-game
-   ```
-4. Fetch dependencies:
+3. Navigate into the directory and pull dependencies:
    ```bash
    flutter pub get
    ```
-5. Run the app:
+4. Run the application:
    ```bash
    flutter run
    ```
 
 ---
 
-## 🛠️ How It Works
+## 🤝 License
 
-1. **Game Board**: The Ludo board with four colored zones is displayed.
-2. **Dice Rolling**: Players take turns rolling a dice, determining movement.
-3. **Pawn Movement**: Pawns move based on dice results and follow Ludo rules.
-4. **Capturing Opponents**: Send opponent pawns back to their base.
-5. **Winning Condition**: Move all pawns to the center home to win the game.
-6. **Game Save**: The game progress is automatically stored using Hive.
-
----
-
-## 👤 Folder Structure
-
-```plaintext
-ludo-game-flutter/
-├── lib/
-│   ├── data/                          # Game logic and repository
-│   ├── domain/                     # Data models
-│   ├── presentation/            # UI files
-│   ├── ├── bloc/                   # Bloc Files
-│   ├── ├── painters/            # Board painter
-│   ├── ├── screens/            # The screens
-│   ├── ├── widgets/            # Various widgets
-│   ├── main.dart                  # Main entry point
-│   ├── injection.dart            # Dependency injection setup
-└── pubspec.yaml                # Project dependencies
-```
-
----
-
-## 🧐 Future Improvements
-
-- **Online Multiplayer and AI**: Play Ludo with friends across the world. Play with AI when no one is there.
-- **Custom Rules Mode**: Modify Ludo rules for a personalized experience.
-- **Leaderboards & Achievements**: Track scores and unlock achievements.
-- **Hive Storage**: Saves game progress and tracks previous match stats.
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Feel free to submit issues and pull requests to improve the game.
-
----
-
-## 📜 License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License.

@@ -97,6 +97,7 @@ class GameState extends Equatable {
   final bool isMoving;
   final List<Token> validTokens;
   final CaptureEffect? captureEffect;
+  final List<int> finishOrder;
 
   const GameState({
     this.players = const [],
@@ -108,6 +109,7 @@ class GameState extends Equatable {
     this.isMoving = false,
     this.validTokens = const [],
     this.captureEffect,
+    this.finishOrder = const [],
   });
 
   factory GameState.fromJson(Map<String, dynamic> json) {
@@ -130,6 +132,10 @@ class GameState extends Equatable {
           ? null
           : CaptureEffect.fromJson(
               json['captureEffect'] as Map<String, dynamic>),
+      finishOrder: (json['finishOrder'] as List<dynamic>?)
+              ?.map((e) => e as int)
+              .toList() ??
+          const [],
     );
   }
 
@@ -143,6 +149,7 @@ class GameState extends Equatable {
         'isMoving': isMoving,
         'validTokens': validTokens.map((token) => token.toJson()).toList(),
         'captureEffect': captureEffect?.toJson(),
+        'finishOrder': finishOrder,
       };
 
   GameState copyWith({
@@ -155,6 +162,7 @@ class GameState extends Equatable {
     bool? isMoving,
     List<Token>? validTokens,
     Object? captureEffect = _captureEffectNotSet,
+    List<int>? finishOrder,
   }) {
     return GameState(
       players: players ?? this.players,
@@ -170,6 +178,7 @@ class GameState extends Equatable {
       captureEffect: identical(captureEffect, _captureEffectNotSet)
           ? this.captureEffect
           : captureEffect as CaptureEffect?,
+      finishOrder: finishOrder ?? this.finishOrder,
     );
   }
 
@@ -184,6 +193,7 @@ class GameState extends Equatable {
         isMoving,
         validTokens,
         captureEffect,
+        finishOrder,
       ];
 }
 
@@ -213,6 +223,7 @@ class GameBloc extends Bloc<GameEvent, GameState> {
       isMoving: false,
       validTokens: const [],
       captureEffect: null,
+      finishOrder: const [],
     ));
   }
 
@@ -421,21 +432,64 @@ class GameBloc extends Bloc<GameEvent, GameState> {
     updatedPlayers = captureResult.players;
     final isWinner =
         gameRepository.checkWinner(updatedPlayers[currentPlayerIndex]);
-    if (isWinner) {
-        // Persist simple stats locally
+    if (isWinner && !updatedPlayers[currentPlayerIndex].hasFinished) {
+      // Mark the player as finished with their rank
+      final newFinishOrder = List<int>.from(state.finishOrder)
+        ..add(currentPlayerIndex);
+      final finishRank = newFinishOrder.length;
+
+      updatedPlayers = List<Player>.from(updatedPlayers);
+      updatedPlayers[currentPlayerIndex] =
+          updatedPlayers[currentPlayerIndex].copyWith(
+        hasFinished: true,
+        finishRank: finishRank,
+      );
+
+      // Persist stats for the first winner
+      if (finishRank == 1) {
         try {
           PlayerPrefs.incrementTotalGames();
           PlayerPrefs.incrementWins();
           PlayerPrefs.setWinStreak(PlayerPrefs.winStreak + 1);
         } catch (_) {}
+      }
+
+      // Count unfinished players
+      final unfinishedPlayers =
+          updatedPlayers.where((p) => !p.hasFinished).toList();
+
+      if (unfinishedPlayers.length <= 1) {
+        // Game is over — assign last place to the remaining player
+        if (unfinishedPlayers.length == 1) {
+          final lastPlayer = unfinishedPlayers.first;
+          final lastPlayerIndex =
+              updatedPlayers.indexWhere((p) => p.id == lastPlayer.id);
+          newFinishOrder.add(lastPlayerIndex);
+          updatedPlayers[lastPlayerIndex] =
+              updatedPlayers[lastPlayerIndex].copyWith(
+            hasFinished: true,
+            finishRank: newFinishOrder.length,
+          );
+        }
+
+        emit(state.copyWith(
+          players: updatedPlayers,
+          isGameOver: true,
+          canRollDice: false,
+          isMoving: false,
+          validTokens: const [],
+          captureEffect: null,
+          finishOrder: newFinishOrder,
+        ));
+        return;
+      }
+
+      // Game continues — move to the next unfinished player
       emit(state.copyWith(
         players: updatedPlayers,
-        isGameOver: true,
-        canRollDice: false,
-        isMoving: false,
-        validTokens: const [],
-        captureEffect: null,
+        finishOrder: newFinishOrder,
       ));
+      _moveToNextPlayer(emit, updatedPlayers);
       return;
     }
 
@@ -461,8 +515,19 @@ class GameBloc extends Bloc<GameEvent, GameState> {
     final activePlayers = players ?? state.players;
     if (activePlayers.isEmpty) return;
 
-    final nextPlayerIndex =
+    // Find the next player who hasn't finished
+    var nextPlayerIndex =
         (state.currentPlayerIndex + 1) % activePlayers.length;
+    var attempts = 0;
+    while (activePlayers[nextPlayerIndex].hasFinished &&
+        attempts < activePlayers.length) {
+      nextPlayerIndex = (nextPlayerIndex + 1) % activePlayers.length;
+      attempts++;
+    }
+
+    // If all players are finished (shouldn't happen), don't emit
+    if (attempts >= activePlayers.length) return;
+
     emit(state.copyWith(
       players: activePlayers,
       currentPlayerIndex: nextPlayerIndex,

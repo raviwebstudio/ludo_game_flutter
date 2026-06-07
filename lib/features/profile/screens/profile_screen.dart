@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:ludo_game/core/constants/colors.dart';
@@ -25,11 +26,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
   int _wins = 0;
   int _winStreak = 0;
 
+  StreamSubscription<void>? _changesSubscription;
+
   @override
   void initState() {
     super.initState();
     _loadPrefs();
-    PlayerPrefs.changes.listen((_) => _loadPrefs());
+    _changesSubscription = PlayerPrefs.changes.listen((_) => _loadPrefs());
+  }
+
+  @override
+  void dispose() {
+    _changesSubscription?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadPrefs() async {
@@ -83,7 +92,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
     if (res == true) {
       await PlayerPrefs.resetStats();
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Stats reset completed')));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Stats reset completed')));
+      }
     }
   }
 

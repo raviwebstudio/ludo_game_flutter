@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ludo_game/data/game_repository_impl.dart';
 import 'package:ludo_game/domain/models/board_position.dart';
@@ -197,6 +198,12 @@ void main() {
         repository.checkWinner(player.copyWith(tokens: finishedTokens)),
         isTrue,
       );
+    });
+
+    test('playerColors has Yellow at index 2 and Blue at index 3 to align with paths', () {
+      final repository = GameRepositoryImpl();
+      expect(repository.playerColors[2], Colors.yellow);
+      expect(repository.playerColors[3], Colors.blue);
     });
   });
 }

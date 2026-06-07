@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
-import '../../../core/constants/colors.dart';
 import '../../../core/constants/text_styles.dart';
 
-/// "YOUR TURN" / "PLAYER X'S TURN" banner with decorative lines.
+/// Dynamic player name turn banner with decorative lines colored by the player's color.
 class TurnIndicator extends StatelessWidget {
   final int playerIndex;
+  final String playerName;
   final Color playerColor;
   final bool isGameOver;
 
   const TurnIndicator({
     required this.playerIndex,
+    required this.playerName,
     required this.playerColor,
     this.isGameOver = false,
     super.key,
@@ -18,8 +19,8 @@ class TurnIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final text = isGameOver
-        ? 'PLAYER ${playerIndex + 1} WINS!'
-        : 'YOUR TURN';
+        ? '${playerName.toUpperCase()} WINS!'
+        : "${playerName.toUpperCase()}'S TURN";
 
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 400),
@@ -41,7 +42,7 @@ class TurnIndicator extends StatelessWidget {
                   gradient: LinearGradient(
                     colors: [
                       Colors.transparent,
-                      LudoColors.mintGreen.withValues(alpha: 0.6),
+                      playerColor.withValues(alpha: 0.6),
                     ],
                   ),
                 ),
@@ -51,7 +52,7 @@ class TurnIndicator extends StatelessWidget {
             Text(
               text,
               style: LudoTextStyles.headlineXS.copyWith(
-                color: LudoColors.mintGreen,
+                color: playerColor,
                 letterSpacing: 3,
                 fontWeight: FontWeight.w700,
               ),
@@ -64,7 +65,7 @@ class TurnIndicator extends StatelessWidget {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      LudoColors.mintGreen.withValues(alpha: 0.6),
+                      playerColor.withValues(alpha: 0.6),
                       Colors.transparent,
                     ],
                   ),

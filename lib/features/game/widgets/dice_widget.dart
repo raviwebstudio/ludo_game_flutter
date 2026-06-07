@@ -2,11 +2,10 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../../../core/constants/colors.dart';
+import '../../../core/services/haptic_service.dart';
 
-/// A premium dice widget with lavender tint, purple glow, spin animation,
-/// and bounce settle — matching the Ludo Elite reference.
+/// A premium 3D CustomPaint dice widget with spin, bounce, and glow animations.
 class DiceWidget extends StatefulWidget {
   final int? value;
   final Future<int?> Function() onRoll;
@@ -41,6 +40,8 @@ class _DiceWidgetState extends State<DiceWidget> with TickerProviderStateMixin {
   late final AnimationController _glowCtrl;
   late final Animation<double> _rollCurve;
   late final Animation<double> _bounceScale;
+  late final Tween<double> _rotationTween;
+  late final Tween<double> _rollScaleTween;
 
   Timer? _faceTimer;
   int _faceIdx = 0;
@@ -56,16 +57,23 @@ class _DiceWidgetState extends State<DiceWidget> with TickerProviderStateMixin {
 
     _rollCtrl = AnimationController(vsync: this, duration: _rollDuration);
     _bounceCtrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 420));
+      vsync: this,
+      duration: const Duration(milliseconds: 420),
+    );
     _glowCtrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 1200))
-      ..repeat(reverse: true);
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat(reverse: true);
 
     _rollCurve = CurvedAnimation(
-        parent: _rollCtrl, curve: Curves.easeInOutCubic);
+      parent: _rollCtrl,
+      curve: Curves.easeInOutCubic,
+    );
     _bounceScale = Tween<double>(begin: 1, end: 1.18).animate(
       CurvedAnimation(parent: _bounceCtrl, curve: Curves.elasticOut),
     );
+    _rotationTween = Tween<double>(begin: 0, end: math.pi * 4);
+    _rollScaleTween = Tween<double>(begin: 1, end: 1.08);
   }
 
   @override
@@ -99,7 +107,7 @@ class _DiceWidgetState extends State<DiceWidget> with TickerProviderStateMixin {
   Future<void> _handleTap() async {
     if (!widget.enabled || _isRolling) return;
 
-    unawaited(HapticFeedback.mediumImpact());
+    unawaited(HapticService.mediumTap());
 
     setState(() {
       _isRolling = true;
@@ -152,152 +160,238 @@ class _DiceWidgetState extends State<DiceWidget> with TickerProviderStateMixin {
       _displayValue = v;
       _lastSettled = v;
     });
-    unawaited(HapticFeedback.selectionClick());
+    unawaited(HapticService.selection());
     unawaited(_bounceCtrl.forward(from: 0));
   }
 
   @override
   Widget build(BuildContext context) {
     final canTap = widget.enabled && !_isRolling;
-    final face = _displayValue ?? widget.value;
+    final faceValue = _displayValue ?? widget.value;
+    final activeColor = widget.activeColor ?? LudoColors.purple;
 
     return GestureDetector(
       onTap: canTap ? _handleTap : null,
       child: AnimatedBuilder(
-        animation: Listenable.merge([_rollCtrl, _bounceCtrl, _glowCtrl]),
+        animation: Listenable.merge([
+          _rollCtrl,
+          _bounceCtrl,
+          _glowCtrl,
+        ]),
         builder: (context, child) {
-          final rotation = _isRolling
-              ? Tween<double>(begin: 0, end: math.pi * 4)
-                  .evaluate(_rollCurve)
-              : 0.0;
-          final rollScale = _isRolling
-              ? Tween<double>(begin: 1, end: 1.08).evaluate(_rollCurve)
-              : 1.0;
+          final rotation =
+              _isRolling ? _rotationTween.evaluate(_rollCurve) : 0.0;
+          final rollScale =
+              _isRolling ? _rollScaleTween.evaluate(_rollCurve) : 1.0;
           final scale = rollScale * _bounceScale.value;
+          final glowOpacity = _glowCtrl.value;
 
           return Transform.rotate(
             angle: rotation,
             child: Transform.scale(
               scale: scale,
-              child: child,
+              child: Container(
+                width: widget.size,
+                height: widget.size,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(widget.size * 0.18),
+                  boxShadow: [
+                    // Bottom shadow for 3D depth
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.35),
+                      blurRadius: widget.size * 0.15,
+                      offset: Offset(0, widget.size * 0.06),
+                      spreadRadius: widget.size * 0.01,
+                    ),
+                    // Colored glow when active
+                    if (widget.isActivePlayer)
+                      BoxShadow(
+                        color: activeColor.withValues(
+                          alpha: 0.2 + glowOpacity * 0.15,
+                        ),
+                        blurRadius: widget.size * 0.3,
+                        spreadRadius: widget.size * 0.02,
+                      ),
+                  ],
+                ),
+                child: CustomPaint(
+                  painter: _Dice3DPainter(
+                    faceValue: faceValue ?? 0,
+                    cornerRadius: widget.size * 0.18,
+                    isEnabled: widget.enabled,
+                  ),
+                  size: Size(widget.size, widget.size),
+                ),
+              ),
             ),
           );
         },
-        child: Container(
-          width: widget.size,
-          height: widget.size,
-          decoration: BoxDecoration(
-            // Lavender tint
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                const Color(0xFFF0E6FF),
-                const Color(0xFFE8D8F8),
-              ],
-            ),
-            borderRadius: BorderRadius.circular(widget.size * 0.22),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.2),
-                blurRadius: 12,
-                offset: const Offset(0, 6),
-              ),
-              if (widget.isActivePlayer)
-                BoxShadow(
-                  color: LudoColors.purple.withValues(
-                    alpha: 0.3 + 0.15 * _glowCtrl.value,
-                  ),
-                  blurRadius: 24,
-                  spreadRadius: 4,
-                ),
-            ],
-          ),
-          child: face != null
-              ? Center(child: _buildDiceFace(face))
-              : Center(
-                  child: Icon(
-                    Icons.casino_outlined,
-                    color: LudoColors.purple.withValues(alpha: 0.4),
-                    size: widget.size * 0.45,
-                  ),
-                ),
+      ),
+    );
+  }
+}
+
+/// Custom painter that draws a 3D-looking dice with proper dot pips.
+class _Dice3DPainter extends CustomPainter {
+  final int faceValue;
+  final double cornerRadius;
+  final bool isEnabled;
+
+  _Dice3DPainter({
+    required this.faceValue,
+    required this.cornerRadius,
+    required this.isEnabled,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
+    final rRect = RRect.fromRectAndRadius(rect, Radius.circular(cornerRadius));
+
+    // --- 3D Body ---
+    // Bottom face (dark edge for depth)
+    final bottomEdge = RRect.fromRectAndRadius(
+      rect.translate(0, size.height * 0.04),
+      Radius.circular(cornerRadius),
+    );
+    canvas.drawRRect(
+      bottomEdge,
+      Paint()..color = const Color(0xFFB0B0B0),
+    );
+
+    // Main face gradient (white to light grey for 3D look)
+    final faceGradient = LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [
+        const Color(0xFFFDFDFD),
+        const Color(0xFFF0F0F0),
+        const Color(0xFFE8E8E8),
+      ],
+      stops: const [0.0, 0.6, 1.0],
+    );
+    canvas.drawRRect(
+      rRect,
+      Paint()..shader = faceGradient.createShader(rect),
+    );
+
+    // Top-left highlight for 3D shine
+    final highlightGradient = RadialGradient(
+      center: const Alignment(-0.6, -0.6),
+      radius: 1.2,
+      colors: [
+        Colors.white.withValues(alpha: 0.7),
+        Colors.white.withValues(alpha: 0.0),
+      ],
+    );
+    canvas.drawRRect(
+      rRect,
+      Paint()..shader = highlightGradient.createShader(rect),
+    );
+
+    // Subtle border
+    canvas.drawRRect(
+      rRect,
+      Paint()
+        ..color = const Color(0xFFD0D0D0)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.2,
+    );
+
+    // --- Draw Pips ---
+    if (faceValue < 1 || faceValue > 6) {
+      // Show a dice icon when no value
+      _drawPlaceholderIcon(canvas, size);
+      return;
+    }
+
+    final pipColor = isEnabled
+        ? const Color(0xFF2C3E50)
+        : const Color(0xFF95A5A6);
+    final pipRadius = size.width * 0.085;
+    final pipPaint = Paint()
+      ..color = pipColor
+      ..style = PaintingStyle.fill;
+
+    // Pip shadow
+    final pipShadowPaint = Paint()
+      ..color = Colors.black.withValues(alpha: 0.12)
+      ..style = PaintingStyle.fill;
+
+    final positions = _getPipPositions(faceValue, size);
+    for (final pos in positions) {
+      // Draw pip shadow
+      canvas.drawCircle(
+        pos + Offset(size.width * 0.01, size.width * 0.015),
+        pipRadius,
+        pipShadowPaint,
+      );
+      // Draw pip
+      canvas.drawCircle(pos, pipRadius, pipPaint);
+      // Draw pip highlight
+      canvas.drawCircle(
+        pos + Offset(-pipRadius * 0.25, -pipRadius * 0.25),
+        pipRadius * 0.35,
+        Paint()..color = Colors.white.withValues(alpha: 0.3),
+      );
+    }
+  }
+
+  List<Offset> _getPipPositions(int value, Size size) {
+    final cx = size.width / 2;
+    final cy = size.height / 2;
+    final offset = size.width * 0.25; // Distance from center for corner pips
+
+    final topLeft = Offset(cx - offset, cy - offset);
+    final topRight = Offset(cx + offset, cy - offset);
+    final midLeft = Offset(cx - offset, cy);
+    final midRight = Offset(cx + offset, cy);
+    final bottomLeft = Offset(cx - offset, cy + offset);
+    final bottomRight = Offset(cx + offset, cy + offset);
+    final center = Offset(cx, cy);
+
+    switch (value) {
+      case 1:
+        return [center];
+      case 2:
+        return [topRight, bottomLeft];
+      case 3:
+        return [topRight, center, bottomLeft];
+      case 4:
+        return [topLeft, topRight, bottomLeft, bottomRight];
+      case 5:
+        return [topLeft, topRight, center, bottomLeft, bottomRight];
+      case 6:
+        return [topLeft, topRight, midLeft, midRight, bottomLeft, bottomRight];
+      default:
+        return [];
+    }
+  }
+
+  void _drawPlaceholderIcon(Canvas canvas, Size size) {
+    final textPainter = TextPainter(
+      text: const TextSpan(
+        text: '?',
+        style: TextStyle(
+          fontSize: 32,
+          fontWeight: FontWeight.w700,
+          color: Color(0xFFBDBDBD),
         ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    textPainter.paint(
+      canvas,
+      Offset(
+        (size.width - textPainter.width) / 2,
+        (size.height - textPainter.height) / 2,
       ),
     );
   }
 
-  Widget _buildDiceFace(int value) {
-    final dotSize = widget.size * 0.12;
-    final spacing = widget.size * 0.06;
-    final dotColor = LudoColors.purpleDark;
-
-    Widget dot() => Container(
-          width: dotSize,
-          height: dotSize,
-          decoration: BoxDecoration(
-            color: dotColor,
-            shape: BoxShape.circle,
-          ),
-        );
-
-    Widget empty() => SizedBox(width: dotSize, height: dotSize);
-
-    // Build standard dice patterns
-    List<Widget> rows;
-    switch (value) {
-      case 1:
-        rows = [
-          Row(mainAxisSize: MainAxisSize.min, children: [empty(), empty(), empty()]),
-          Row(mainAxisSize: MainAxisSize.min, children: [empty(), dot(), empty()]),
-          Row(mainAxisSize: MainAxisSize.min, children: [empty(), empty(), empty()]),
-        ];
-        break;
-      case 2:
-        rows = [
-          Row(mainAxisSize: MainAxisSize.min, children: [empty(), empty(), dot()]),
-          Row(mainAxisSize: MainAxisSize.min, children: [empty(), empty(), empty()]),
-          Row(mainAxisSize: MainAxisSize.min, children: [dot(), empty(), empty()]),
-        ];
-        break;
-      case 3:
-        rows = [
-          Row(mainAxisSize: MainAxisSize.min, children: [empty(), empty(), dot()]),
-          Row(mainAxisSize: MainAxisSize.min, children: [empty(), dot(), empty()]),
-          Row(mainAxisSize: MainAxisSize.min, children: [dot(), empty(), empty()]),
-        ];
-        break;
-      case 4:
-        rows = [
-          Row(mainAxisSize: MainAxisSize.min, children: [dot(), empty(), dot()]),
-          Row(mainAxisSize: MainAxisSize.min, children: [empty(), empty(), empty()]),
-          Row(mainAxisSize: MainAxisSize.min, children: [dot(), empty(), dot()]),
-        ];
-        break;
-      case 5:
-        rows = [
-          Row(mainAxisSize: MainAxisSize.min, children: [dot(), empty(), dot()]),
-          Row(mainAxisSize: MainAxisSize.min, children: [empty(), dot(), empty()]),
-          Row(mainAxisSize: MainAxisSize.min, children: [dot(), empty(), dot()]),
-        ];
-        break;
-      case 6:
-      default:
-        rows = [
-          Row(mainAxisSize: MainAxisSize.min, children: [dot(), empty(), dot()]),
-          Row(mainAxisSize: MainAxisSize.min, children: [dot(), empty(), dot()]),
-          Row(mainAxisSize: MainAxisSize.min, children: [dot(), empty(), dot()]),
-        ];
-    }
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: rows
-          .map((row) => Padding(
-                padding: EdgeInsets.symmetric(vertical: spacing * 0.5),
-                child: row,
-              ))
-          .toList(),
-    );
+  @override
+  bool shouldRepaint(_Dice3DPainter oldDelegate) {
+    return oldDelegate.faceValue != faceValue ||
+        oldDelegate.isEnabled != isEnabled;
   }
 }

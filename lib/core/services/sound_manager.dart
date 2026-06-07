@@ -1,4 +1,5 @@
 import 'package:audioplayers/audioplayers.dart';
+import 'package:ludo_game/core/services/player_prefs.dart';
 
 /// Sound types used throughout Ludo Elite.
 enum SoundType {
@@ -17,12 +18,15 @@ class SoundManager {
   static final SoundManager _instance = SoundManager._internal();
 
   final AudioPlayer _audioPlayer = AudioPlayer();
-  bool _isMuted = false;
-  double _volume = 1.0;
+  late bool _isMuted;
+  late double _volume;
 
   factory SoundManager() => _instance;
 
-  SoundManager._internal();
+  SoundManager._internal() {
+    _isMuted = !PlayerPrefs.soundEnabled;
+    _volume = PlayerPrefs.volume;
+  }
 
   bool get isMuted => _isMuted;
   double get volume => _volume;
@@ -61,10 +65,17 @@ class SoundManager {
 
   void toggleMute() {
     _isMuted = !_isMuted;
+    PlayerPrefs.setSoundEnabled(!_isMuted);
+  }
+
+  void setMuted(bool muted) {
+    _isMuted = muted;
+    PlayerPrefs.setSoundEnabled(!_isMuted);
   }
 
   void setVolume(double v) {
     _volume = v.clamp(0.0, 1.0);
+    PlayerPrefs.setVolume(_volume);
   }
 
   Future<void> stopAll() async {

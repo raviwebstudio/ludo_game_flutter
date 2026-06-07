@@ -1,26 +1,37 @@
 import 'package:flutter/services.dart';
+import 'package:ludo_game/core/services/player_prefs.dart';
 
-/// Thin wrapper around [HapticFeedback] for convenience.
+/// Thin wrapper around [HapticFeedback] that respects user settings.
 class HapticService {
   HapticService._();
 
   static Future<void> lightTap() async {
-    await HapticFeedback.lightImpact();
+    if (PlayerPrefs.hapticsEnabled) {
+      await HapticFeedback.lightImpact();
+    }
   }
 
   static Future<void> mediumTap() async {
-    await HapticFeedback.mediumImpact();
+    if (PlayerPrefs.hapticsEnabled) {
+      await HapticFeedback.mediumImpact();
+    }
   }
 
   static Future<void> heavyTap() async {
-    await HapticFeedback.heavyImpact();
+    if (PlayerPrefs.hapticsEnabled) {
+      await HapticFeedback.heavyImpact();
+    }
   }
 
   static Future<void> selection() async {
-    await HapticFeedback.selectionClick();
+    if (PlayerPrefs.hapticsEnabled) {
+      await HapticFeedback.selectionClick();
+    }
   }
 
   static Future<void> vibrate() async {
-    await HapticFeedback.vibrate();
+    if (PlayerPrefs.hapticsEnabled) {
+      await HapticFeedback.vibrate();
+    }
   }
 }

@@ -29,6 +29,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
     return Scaffold(
       body: Container(
         width: double.infinity,
@@ -48,7 +49,7 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Stack(
           children: [
             // ── Floating particles ──
-            ..._buildParticles(),
+            ..._buildParticles(size.width, size.height),
 
             // ── Main content ──
             SafeArea(
@@ -145,11 +146,11 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   /// Generates subtle floating dot particles across the screen.
-  List<Widget> _buildParticles() {
+  List<Widget> _buildParticles(double width, double height) {
     final rng = Random(42);
     return List.generate(12, (i) {
-      final left = rng.nextDouble() * 400;
-      final top = 600 + rng.nextDouble() * 200;
+      final left = rng.nextDouble() * width;
+      final top = rng.nextDouble() * height;
       final size = 3.0 + rng.nextDouble() * 5;
       final opacity = 0.15 + rng.nextDouble() * 0.25;
       final delay = (rng.nextDouble() * 1500).toInt();

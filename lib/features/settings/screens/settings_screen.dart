@@ -4,6 +4,7 @@ import 'package:ludo_game/core/constants/colors.dart';
 import 'package:ludo_game/core/constants/dimensions.dart';
 import 'package:ludo_game/core/constants/text_styles.dart';
 import 'package:ludo_game/core/services/sound_manager.dart';
+import 'package:ludo_game/core/services/player_prefs.dart';
 import 'package:ludo_game/shared/widgets/glass_morphism.dart';
 
 /// Premium Settings screen to manage sound, haptic feedback and custom themes.
@@ -17,21 +18,22 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   late bool _soundEnabled;
   late double _volume;
-  bool _hapticsEnabled = true;
-  String _selectedTheme = 'Neon Dark';
+  late bool _hapticsEnabled;
+  late String _selectedTheme;
 
   @override
   void initState() {
     super.initState();
-    final sm = SoundManager();
-    _soundEnabled = !sm.isMuted;
-    _volume = sm.volume;
+    _soundEnabled = PlayerPrefs.soundEnabled;
+    _volume = PlayerPrefs.volume;
+    _hapticsEnabled = PlayerPrefs.hapticsEnabled;
+    _selectedTheme = PlayerPrefs.boardTheme;
   }
 
   void _toggleSound(bool value) {
     setState(() {
       _soundEnabled = value;
-      SoundManager().toggleMute();
+      SoundManager().setMuted(!value);
     });
   }
 
@@ -40,6 +42,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _volume = value;
       SoundManager().setVolume(value);
     });
+  }
+
+  void _toggleHaptics(bool value) {
+    setState(() {
+      _hapticsEnabled = value;
+      PlayerPrefs.setHapticsEnabled(value);
+    });
+  }
+
+  void _changeTheme(String? value) {
+    if (value != null) {
+      setState(() {
+        _selectedTheme = value;
+        PlayerPrefs.setBoardTheme(value);
+      });
+    }
   }
 
   @override
@@ -127,9 +145,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           icon: Icons.vibration,
                           title: 'Haptic Feedback',
                           value: _hapticsEnabled,
-                          onChanged: (val) {
-                            setState(() => _hapticsEnabled = val);
-                          },
+                          onChanged: _toggleHaptics,
                         ),
                       ],
                     ),
@@ -151,12 +167,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           icon: Icons.palette,
                           title: 'Board Theme',
                           value: _selectedTheme,
-                          options: ['Neon Dark', 'Classic Board', 'Royal Gold'],
-                          onChanged: (val) {
-                            if (val != null) {
-                              setState(() => _selectedTheme = val);
-                            }
-                          },
+                          options: const ['Neon Dark', 'Classic Board', 'Royal Gold'],
+                          onChanged: _changeTheme,
                         ),
                       ],
                     ),
