@@ -27,10 +27,10 @@ class GlassMorphism extends StatelessWidget {
         child: Container(
           padding: padding,
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: opacity),
+            color: Colors.white.withValues(alpha: opacity.clamp(0.65, 0.85)),
             borderRadius: borderRadius,
             border: Border.all(
-              color: Colors.white.withValues(alpha: opacity * 0.5),
+              color: Colors.black.withValues(alpha: 0.06),
               width: 1,
             ),
           ),

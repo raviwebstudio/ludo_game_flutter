@@ -84,7 +84,7 @@ class _PlayerSelectorState extends State<PlayerSelector> {
                             border: Border.all(
                               color: isSelected
                                   ? LudoColors.purpleLight
-                                  : Colors.white.withValues(alpha: 0.1),
+                                  : Colors.black.withValues(alpha: 0.08),
                               width: isSelected ? 2 : 1,
                             ),
                             boxShadow: isSelected

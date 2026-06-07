@@ -195,7 +195,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 ),
                                 child: const Icon(
                                   Icons.edit,
-                                  color: LudoColors.darkNavyDark,
+                                  color: Colors.white,
                                   size: 16,
                                 ),
                               ),
@@ -271,7 +271,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               height: 10,
                               width: double.infinity,
                               decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.1),
+                                color: Colors.black.withValues(alpha: 0.08),
                                 borderRadius: BorderRadius.circular(5),
                               ),
                             ),

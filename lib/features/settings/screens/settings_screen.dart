@@ -113,7 +113,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           onChanged: _toggleSound,
                         ),
                         if (_soundEnabled) ...[
-                          const Divider(color: Colors.white10),
+                          const Divider(color: Colors.black12),
                           Padding(
                             padding: const EdgeInsets.symmetric(vertical: 8.0),
                             child: Row(
@@ -124,7 +124,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   child: SliderTheme(
                                     data: SliderThemeData(
                                       activeTrackColor: LudoColors.brightBlue,
-                                      inactiveTrackColor: Colors.white10,
+                                      inactiveTrackColor: Colors.black.withValues(alpha: 0.08),
                                       thumbColor: LudoColors.brightBlue,
                                       overlayColor: LudoColors.brightBlue.withValues(alpha: 0.2),
                                       trackHeight: 4,
@@ -140,7 +140,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ),
                           ),
                         ],
-                        const Divider(color: Colors.white10),
+                        const Divider(color: Colors.black12),
                         _buildToggleTile(
                           icon: Icons.vibration,
                           title: 'Haptic Feedback',
@@ -187,9 +187,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     child: Column(
                       children: [
                         _buildInfoTile('Version', '1.0.0 (Elite Edition)'),
-                        const Divider(color: Colors.white10),
+                        const Divider(color: Colors.black12),
                         _buildInfoTile('Developer', 'Antigravity AI'),
-                        const Divider(color: Colors.white10),
+                        const Divider(color: Colors.black12),
                         _buildInfoTile('Engine', 'Flutter 3.x'),
                       ],
                     ),
@@ -244,7 +244,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             activeThumbColor: LudoColors.mintGreen,
             activeTrackColor: LudoColors.mintGreen.withValues(alpha: 0.3),
             inactiveThumbColor: LudoColors.textMedium,
-            inactiveTrackColor: Colors.white10,
+            inactiveTrackColor: Colors.black.withValues(alpha: 0.08),
           ),
         ],
       ),
@@ -275,7 +275,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           DropdownButton<String>(
             value: value,
-            dropdownColor: LudoColors.darkNavyDark,
+            dropdownColor: LudoColors.darkNavyLight,
             underline: const SizedBox(),
             icon: const Icon(Icons.arrow_drop_down, color: LudoColors.mintGreen),
             items: options.map((opt) {

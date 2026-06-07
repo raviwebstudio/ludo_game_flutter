@@ -9,7 +9,7 @@ import '../../../presentation/bloc/game_bloc.dart';
 
 /// A board painter matching the Ludo Elite reference designs with support for custom themes.
 ///
-/// Theme options: Neon Dark, Classic Board, Royal Gold.
+/// Theme options: Neon Dark, Classic Board, Royal Gold (adapted for light mode visibility).
 class ModernBoardPainter extends CustomPainter {
   final List<Player> players;
   final int currentPlayerIndex;
@@ -49,20 +49,20 @@ class ModernBoardPainter extends CustomPainter {
     final isClassic = theme == 'Classic Board';
     final isGold = theme == 'Royal Gold';
 
-    // Theme values
+    // Theme values (adapted for light backgrounds)
     final boardBg = isClassic
         ? const Color(0xFFF2F4F8)
-        : (isGold ? const Color(0xFF1A1610) : const Color(0xFF1A2233));
+        : (isGold ? const Color(0xFFFFFDF0) : const Color(0xFFFFFFFF));
     final gridLineColor = isClassic
         ? Colors.black.withValues(alpha: 0.1)
-        : (isGold ? const Color(0xFFFFD700).withValues(alpha: 0.15) : Colors.white.withValues(alpha: 0.04));
+        : (isGold ? const Color(0xFFFFD700).withValues(alpha: 0.2) : Colors.black.withValues(alpha: 0.06));
     final cellBorderColor = isClassic
         ? Colors.black.withValues(alpha: 0.12)
-        : (isGold ? const Color(0xFFFFD700).withValues(alpha: 0.2) : Colors.white.withValues(alpha: 0.06));
+        : (isGold ? const Color(0xFFFFD700).withValues(alpha: 0.25) : Colors.black.withValues(alpha: 0.08));
     final centerPathBg = isClassic
         ? Colors.white
-        : (isGold ? const Color(0xFF2C2418) : const Color(0xFF1E2A3E));
-    final homeStretchAlpha = isClassic ? 0.35 : (isGold ? 0.18 : 0.12);
+        : (isGold ? const Color(0xFFFDFBF0) : const Color(0xFFE8EAF0));
+    final homeStretchAlpha = isClassic ? 0.35 : (isGold ? 0.18 : 0.18);
     final homeBgAlpha = isClassic ? 0.35 : (isGold ? 0.22 : 0.18);
 
     _drawBackground(canvas, size, cellSize, boardBg, gridLineColor, cellBorderColor);
@@ -174,7 +174,7 @@ class ModernBoardPainter extends CustomPainter {
     final innerRR = RRect.fromRectAndRadius(innerRect, const Radius.circular(10));
     canvas.drawRRect(
       innerRR,
-      Paint()..color = Colors.white.withValues(alpha: 0.08),
+      Paint()..color = Colors.black.withValues(alpha: 0.04), // Dark tint instead of white
     );
 
     // 4 token slot circles
@@ -183,7 +183,7 @@ class ModernBoardPainter extends CustomPainter {
       for (var col = 0; col < 2; col++) {
         final cx = offset.dx + innerMargin + slotSize * (col + 0.5);
         final cy = offset.dy + innerMargin + slotSize * (row + 0.5);
-        // Dark rounded slot
+        // Light rounded slot
         final slotRR = RRect.fromRectAndRadius(
           Rect.fromCenter(
             center: Offset(cx, cy),
@@ -194,7 +194,7 @@ class ModernBoardPainter extends CustomPainter {
         );
         canvas.drawRRect(
           slotRR,
-          Paint()..color = const Color(0xFF0A1628),
+          Paint()..color = const Color(0xFFF0F0F5), // Light background slot
         );
 
         // Slot border
@@ -458,11 +458,11 @@ class ModernBoardPainter extends CustomPainter {
     bool isValid,
     bool isCurrentPlayer,
   ) {
-    // Shadow
+    // Shadow (softer shadow on light backgrounds)
     canvas.drawCircle(
       center + const Offset(1.5, 3),
       radius,
-      Paint()..color = Colors.black.withValues(alpha: 0.35),
+      Paint()..color = Colors.black.withValues(alpha: 0.2),
     );
 
     // Base gradient (3D sphere effect)
@@ -492,12 +492,12 @@ class ModernBoardPainter extends CustomPainter {
       Paint()..color = Colors.white.withValues(alpha: 0.4),
     );
 
-    // Ring border
+    // Ring border (subtle dark ring instead of white)
     canvas.drawCircle(
       center,
       radius,
       Paint()
-        ..color = Colors.white.withValues(alpha: 0.4)
+        ..color = Colors.black.withValues(alpha: 0.15)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.5,
     );
@@ -580,12 +580,12 @@ class ModernBoardPainter extends CustomPainter {
         ..strokeWidth = 2.5 * (1 - captureProgress),
     );
 
-    // Burst ring
+    // Burst ring (subtle dark burst ring on light mode)
     canvas.drawCircle(
       startCenter,
       cellSize * (0.35 + 0.4 * burstAlpha),
       Paint()
-        ..color = Colors.white.withValues(alpha: burstAlpha * 0.8)
+        ..color = Colors.black.withValues(alpha: burstAlpha * 0.3)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2,
     );

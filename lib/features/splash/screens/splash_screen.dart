@@ -39,9 +39,9 @@ class _SplashScreenState extends State<SplashScreen> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color(0xFF1A1040), // deep purple‑navy
-              Color(0xFF0F1A32), // dark navy
-              Color(0xFF0A1628), // near‑black
+              Color(0xFFF0ECFF), // soft purple tint
+              Color(0xFFF5F6FA), // cool off-white
+              Color(0xFFEEEFF5), // slightly darker cool gray
             ],
             stops: [0.0, 0.55, 1.0],
           ),
@@ -72,7 +72,7 @@ class _SplashScreenState extends State<SplashScreen> {
                       'Fetching Arena...',
                       style: TextStyle(
                         fontSize: 14,
-                        color: LudoColors.textMedium.withValues(alpha: 0.7),
+                        color: LudoColors.textMedium,
                         letterSpacing: 1,
                       ),
                     ).animate().fadeIn(delay: 600.ms, duration: 600.ms),
@@ -92,11 +92,11 @@ class _SplashScreenState extends State<SplashScreen> {
                       style: TextStyle(
                         fontSize: 52,
                         fontWeight: FontWeight.w900,
-                        color: Colors.white,
+                        color: LudoColors.textLight,
                         letterSpacing: 8,
                         shadows: [
                           Shadow(
-                            color: LudoColors.purple.withValues(alpha: 0.5),
+                            color: LudoColors.purple.withValues(alpha: 0.35),
                             blurRadius: 20,
                           ),
                         ],

@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 
 /// Ludo Elite color palette.
 ///
-/// Dark navy base with vibrant blue accents and classic token colors.
+/// Light background theme with vibrant accents and classic token colors.
 class LudoColors {
   LudoColors._();
 
-  // ── Dark Navy (Main Background) ──
-  static const Color darkNavy = Color(0xFF1A2A4A);
-  static const Color darkNavyLight = Color(0xFF253B5C);
-  static const Color darkNavyDark = Color(0xFF0F1A32);
+  // ── Light Theme Background / Surfaces ──
+  static const Color darkNavy = Color(0xFFF5F6FA);       // Cool off-white background
+  static const Color darkNavyLight = Color(0xFFFFFFFF);  // Pure white for cards/surfaces
+  static const Color darkNavyDark = Color(0xFFEEEFF5);   // Slightly darker cool gray
 
   // ── Blues (Accents & Interactive) ──
   static const Color brightBlue = Color(0xFF00A8FF);
@@ -24,13 +24,13 @@ class LudoColors {
   static const Color blueToken = Color(0xFF3498DB);
 
   // ── Text ──
-  static const Color textLight = Color(0xFFECF0F1);
-  static const Color textMedium = Color(0xFF95A5A6);
-  static const Color textDark = Color(0xFF2C3E50);
+  static const Color textLight = Color(0xFF1A1A2E);      // Near-black for primary text
+  static const Color textMedium = Color(0xFF6B7280);     // Medium gray for secondary text
+  static const Color textDark = Color(0xFFFFFFFF);       // White for light text on dark badges
 
   // ── Utility ──
   static const Color gold = Color(0xFFFFD700);
-  static const Color shadow = Color(0x4D000000);
+  static const Color shadow = Color(0x1F000000);         // Subtle shadow for light backgrounds
 
   // ── Mint Green (Splash / Accents) ──
   static const Color mintGreen = Color(0xFF4AEABC);

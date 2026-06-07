@@ -110,7 +110,7 @@ class _AnimatedDiceState extends State<AnimatedDice>
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.8),
+        color: Colors.black.withValues(alpha: 0.7),
         shape: BoxShape.circle,
       ),
     );

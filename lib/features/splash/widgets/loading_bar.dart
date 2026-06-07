@@ -49,7 +49,7 @@ class _LoadingBarState extends State<LoadingBar>
           width: widget.width,
           height: widget.height,
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.12),
+            color: Colors.black.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(widget.height),
           ),
           child: Align(

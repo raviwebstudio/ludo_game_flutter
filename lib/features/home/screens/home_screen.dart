@@ -22,9 +22,9 @@ class HomeScreen extends StatelessWidget {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color(0xFF0F1A32),
+              LudoColors.darkNavyDark,
               LudoColors.darkNavy,
-              Color(0xFF0F1A32),
+              LudoColors.darkNavyDark,
             ],
           ),
         ),
@@ -141,7 +141,7 @@ class HomeScreen extends StatelessWidget {
                 color: LudoColors.darkNavyLight,
                 borderRadius: BorderRadius.circular(LudoDimensions.radius24),
                 border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.08),
+                  color: Colors.black.withValues(alpha: 0.08),
                 ),
               ),
               child: Row(
@@ -166,7 +166,7 @@ class HomeScreen extends StatelessWidget {
                 color: LudoColors.darkNavyLight,
                 borderRadius: BorderRadius.circular(LudoDimensions.radius24),
                 border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.08),
+                  color: Colors.black.withValues(alpha: 0.08),
                 ),
               ),
               child: Row(
@@ -193,7 +193,7 @@ class HomeScreen extends StatelessWidget {
             shape: BoxShape.circle,
             color: LudoColors.darkNavyLight,
             border: Border.all(
-              color: Colors.white.withValues(alpha: 0.06),
+              color: Colors.black.withValues(alpha: 0.06),
             ),
           ),
           child: const Icon(Icons.notifications_none,

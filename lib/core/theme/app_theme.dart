@@ -2,17 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../constants/colors.dart';
 
-/// The Ludo Elite dark Material 3 theme.
+/// The Ludo Elite light Material 3 theme.
 class AppTheme {
   AppTheme._();
 
   static ThemeData get ludoTheme {
     return ThemeData(
       useMaterial3: true,
-      brightness: Brightness.dark,
+      brightness: Brightness.light,
       primaryColor: LudoColors.softBlue,
       scaffoldBackgroundColor: LudoColors.darkNavy,
-      colorScheme: const ColorScheme.dark(
+      colorScheme: const ColorScheme.light(
         primary: LudoColors.softBlue,
         secondary: LudoColors.brightBlue,
         surface: LudoColors.darkNavyLight,

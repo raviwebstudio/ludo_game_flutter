@@ -118,7 +118,7 @@ class PlayerIndicators extends StatelessWidget {
                         child: Text(
                           'YOU',
                           style: LudoTextStyles.labelSmall.copyWith(
-                            color: LudoColors.darkNavyDark,
+                            color: const Color(0xFF1A1A2E),
                             fontSize: 8,
                             fontWeight: FontWeight.w800,
                           ),

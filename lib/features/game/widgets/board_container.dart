@@ -12,10 +12,10 @@ class BoardContainer extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF1A2233),
+        color: const Color(0xFFFAFBFE),
         borderRadius: BorderRadius.circular(LudoDimensions.radius24),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.06),
+          color: Colors.black.withValues(alpha: 0.08),
           width: 1,
         ),
         boxShadow: [
@@ -25,7 +25,7 @@ class BoardContainer extends StatelessWidget {
             spreadRadius: 2,
           ),
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.4),
+            color: Colors.black.withValues(alpha: 0.12),
             blurRadius: 16,
             offset: const Offset(0, 8),
           ),
