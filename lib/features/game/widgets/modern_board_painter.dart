@@ -53,7 +53,7 @@ class ModernBoardPainter extends CustomPainter {
     final boardBg = isClassic
         ? const Color(0xFFF2F4F8)
         : (isGold ? const Color(0xFFFFFDF0) : const Color(0xFFEDE8DC)); // Light warm beige for Neon Dark
-    final cellBorderColor = const Color(0xFF8C8C8C);
+    final cellBorderColor = const Color(0xFFAAA7AD);
     final centerPathBg = Colors.white;
     final homeStretchAlpha = 0.18;
     final homeBgAlpha = isClassic ? 0.35 : (isGold ? 0.22 : 0.18);
@@ -118,7 +118,7 @@ class ModernBoardPainter extends CustomPainter {
     canvas.drawRRect(
       rr,
       Paint()
-        ..color = const Color(0xFF8C8C8C)
+        ..color = const Color(0xFFAAA7AD)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.2,
     );
@@ -345,7 +345,7 @@ class ModernBoardPainter extends CustomPainter {
 
       // Visible outline for the safe spot cell itself
       final outlinePaint = Paint()
-        ..color = const Color(0xFF8C8C8C)
+        ..color = const Color(0xFFAAA7AD)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.2;
       canvas.drawRect(
