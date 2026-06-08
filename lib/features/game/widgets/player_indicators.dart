@@ -135,18 +135,18 @@ class PlayerIndicators extends StatelessWidget {
         color: theme.background,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isActive ? theme.border : theme.border.withOpacity(0.4),
+          color: isActive ? theme.border : theme.border.withValues(alpha: 0.4),
           width: isActive ? 2.5 : 1.0,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
           if (isActive)
             BoxShadow(
-              color: theme.border.withOpacity(0.35),
+              color: theme.border.withValues(alpha: 0.35),
               blurRadius: 10,
               spreadRadius: 2,
             ),
@@ -224,7 +224,7 @@ class PlayerIndicators extends StatelessWidget {
                   subtitle,
                   style: LudoTextStyles.labelSmall.copyWith(
                     fontSize: 10,
-                    color: theme.text.withOpacity(0.7),
+                    color: theme.text.withValues(alpha: 0.7),
                     fontWeight: FontWeight.w500,
                   ),
                 ),

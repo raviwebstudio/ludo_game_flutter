@@ -87,6 +87,20 @@ class HomeScreen extends StatelessWidget {
                 const SizedBox(height: LudoDimensions.spacing12),
 
                 GameModeCard(
+                  icon: Icons.public,
+                  title: 'ONLINE MULTIPLAYER',
+                  subtitle: 'Matchmaking • Real-time Multiplayer',
+                  gradientColors: const [
+                    LudoColors.brightBlue,
+                    LudoColors.cyan,
+                  ],
+                  onTap: () => Navigator.pushNamed(context, '/online/lobby'),
+                ).animate().fadeIn(delay: 650.ms, duration: 400.ms)
+                    .slideX(begin: -0.1, duration: 400.ms),
+
+                const SizedBox(height: LudoDimensions.spacing12),
+
+                GameModeCard(
                   icon: Icons.settings,
                   title: 'SETTINGS',
                   subtitle: 'Customize Your Experience',
