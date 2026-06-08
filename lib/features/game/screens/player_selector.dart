@@ -34,18 +34,6 @@ class _PlayerSelectorState extends State<PlayerSelector> {
     return PlayerColor.yellow;
   }
 
-  Color _playerColorToColor(PlayerColor pc) {
-    switch (pc) {
-      case PlayerColor.red:
-        return LudoColors.redToken;
-      case PlayerColor.green:
-        return LudoColors.greenToken;
-      case PlayerColor.blue:
-        return LudoColors.blueToken;
-      case PlayerColor.yellow:
-        return LudoColors.yellowToken;
-    }
-  }
 
   String _colorName(Color color) {
     if (color == LudoColors.redToken) return 'Red';

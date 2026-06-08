@@ -248,7 +248,7 @@ class ModernBoardPainter extends CustomPainter {
     canvas.drawPath(
       path,
       Paint()
-        ..color = color.withOpacity(0.15)
+        ..color = color.withValues(alpha: 0.15)
         ..style = PaintingStyle.fill,
     );
   }
@@ -265,7 +265,7 @@ class ModernBoardPainter extends CustomPainter {
     final rect = Rect.fromLTWH(x, y, w, h);
     canvas.drawRect(
       rect,
-      Paint()..color = color.withOpacity(stretchAlpha),
+      Paint()..color = color.withValues(alpha: stretchAlpha),
     );
   }
 
@@ -298,7 +298,6 @@ class ModernBoardPainter extends CustomPainter {
     }
 
     // Draw the center triangle outlines
-    final center = Offset(7.5 * cellSize, 7.5 * cellSize);
     final centerPaint = Paint()
       ..color = cellBorderColor
       ..style = PaintingStyle.stroke
@@ -339,7 +338,7 @@ class ModernBoardPainter extends CustomPainter {
         center,
         cellSize * 0.42,
         Paint()
-          ..color = color.withOpacity(0.2)
+          ..color = color.withValues(alpha: 0.2)
           ..style = PaintingStyle.fill,
       );
 
@@ -360,7 +359,7 @@ class ModernBoardPainter extends CustomPainter {
 
       // Draw star fill with some opacity
       _drawStar(canvas, center, cellSize * 0.28, Paint()
-        ..color = starColor.withOpacity(0.35)
+        ..color = starColor.withValues(alpha: 0.35)
         ..style = PaintingStyle.fill,
       );
 
