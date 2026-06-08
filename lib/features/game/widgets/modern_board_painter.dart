@@ -53,9 +53,9 @@ class ModernBoardPainter extends CustomPainter {
     final boardBg = isClassic
         ? const Color(0xFFF2F4F8)
         : (isGold ? const Color(0xFFFFFDF0) : const Color(0xFFEDE8DC)); // Light warm beige for Neon Dark
-    final cellBorderColor = const Color(0xFF606060);
+    final cellBorderColor = const Color(0xFF8C8C8C);
     final centerPathBg = Colors.white;
-    final homeStretchAlpha = 0.20;
+    final homeStretchAlpha = 0.18;
     final homeBgAlpha = isClassic ? 0.35 : (isGold ? 0.22 : 0.18);
 
     _drawBackground(canvas, size, cellSize, boardBg);
@@ -114,13 +114,13 @@ class ModernBoardPainter extends CustomPainter {
       Paint()..color = color.withValues(alpha: homeBgAlpha),
     );
 
-    // Yard Border - High contrast
+    // Yard Border - Medium gray
     canvas.drawRRect(
       rr,
       Paint()
-        ..color = const Color(0xFF606060)
+        ..color = const Color(0xFF8C8C8C)
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.5,
+        ..strokeWidth = 1.2,
     );
 
     // Inner box for token slots
@@ -248,7 +248,7 @@ class ModernBoardPainter extends CustomPainter {
     canvas.drawPath(
       path,
       Paint()
-        ..color = color.withValues(alpha: 0.15)
+        ..color = color.withOpacity(0.15)
         ..style = PaintingStyle.fill,
     );
   }
@@ -265,7 +265,7 @@ class ModernBoardPainter extends CustomPainter {
     final rect = Rect.fromLTWH(x, y, w, h);
     canvas.drawRect(
       rect,
-      Paint()..color = color.withValues(alpha: stretchAlpha),
+      Paint()..color = color.withOpacity(stretchAlpha),
     );
   }
 
@@ -275,7 +275,7 @@ class ModernBoardPainter extends CustomPainter {
     final gridPaint = Paint()
       ..color = cellBorderColor
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.0;
+      ..strokeWidth = 1.2;
 
     // Draw borders for all cells in vertical path (cols 6..8)
     for (var x = 6; x < 9; x++) {
@@ -339,15 +339,15 @@ class ModernBoardPainter extends CustomPainter {
         center,
         cellSize * 0.42,
         Paint()
-          ..color = color.withValues(alpha: 0.2)
+          ..color = color.withOpacity(0.2)
           ..style = PaintingStyle.fill,
       );
 
       // Visible outline for the safe spot cell itself
       final outlinePaint = Paint()
-        ..color = const Color(0xFF606060)
+        ..color = const Color(0xFF8C8C8C)
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.5;
+        ..strokeWidth = 1.2;
       canvas.drawRect(
         Rect.fromLTWH(spot.x * cellSize, spot.y * cellSize, cellSize, cellSize),
         outlinePaint,
@@ -355,12 +355,12 @@ class ModernBoardPainter extends CustomPainter {
 
       // Darker star icon: lerp color with black to make it darker and more visible
       final starColor = color == LudoColors.textMedium
-          ? const Color(0xFF404040)
-          : Color.lerp(color, Colors.black, 0.45)!;
+          ? const Color(0xFF333333)
+          : Color.lerp(color, Colors.black, 0.6)!;
 
       // Draw star fill with some opacity
       _drawStar(canvas, center, cellSize * 0.28, Paint()
-        ..color = starColor.withValues(alpha: 0.25)
+        ..color = starColor.withOpacity(0.35)
         ..style = PaintingStyle.fill,
       );
 
@@ -368,7 +368,7 @@ class ModernBoardPainter extends CustomPainter {
       _drawStar(canvas, center, cellSize * 0.28, Paint()
         ..color = starColor
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.6,
+        ..strokeWidth = 1.8,
       );
     }
   }
