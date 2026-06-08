@@ -52,30 +52,24 @@ class ModernBoardPainter extends CustomPainter {
     // Theme values (adapted for light backgrounds)
     final boardBg = isClassic
         ? const Color(0xFFF2F4F8)
-        : (isGold ? const Color(0xFFFFFDF0) : const Color(0xFFFFFFFF));
-    final gridLineColor = isClassic
-        ? Colors.black.withValues(alpha: 0.1)
-        : (isGold ? const Color(0xFFFFD700).withValues(alpha: 0.2) : Colors.black.withValues(alpha: 0.06));
-    final cellBorderColor = isClassic
-        ? Colors.black.withValues(alpha: 0.12)
-        : (isGold ? const Color(0xFFFFD700).withValues(alpha: 0.25) : Colors.black.withValues(alpha: 0.08));
-    final centerPathBg = isClassic
-        ? Colors.white
-        : (isGold ? const Color(0xFFFDFBF0) : const Color(0xFFE8EAF0));
-    final homeStretchAlpha = isClassic ? 0.35 : (isGold ? 0.18 : 0.18);
+        : (isGold ? const Color(0xFFFFFDF0) : const Color(0xFFEDE8DC)); // Light warm beige for Neon Dark
+    final cellBorderColor = const Color(0xFF606060);
+    final centerPathBg = Colors.white;
+    final homeStretchAlpha = 0.20;
     final homeBgAlpha = isClassic ? 0.35 : (isGold ? 0.22 : 0.18);
 
-    _drawBackground(canvas, size, cellSize, boardBg, gridLineColor, cellBorderColor);
+    _drawBackground(canvas, size, cellSize, boardBg);
+    _drawCenterPaths(canvas, size, cellSize, centerPathBg);
     _drawPlayerHomes(canvas, size, cellSize, homeBgAlpha);
-    _drawCenterPaths(canvas, size, cellSize, centerPathBg, cellBorderColor);
-    _drawHomeStretch(canvas, size, cellSize, homeStretchAlpha);
+    _drawHomeStretchFills(canvas, size, cellSize, homeStretchAlpha);
+    _drawAllGridLines(canvas, size, cellSize, cellBorderColor);
     _drawSafeSpots(canvas, size, cellSize);
     _drawTokens(canvas, size, cellSize);
   }
 
   // ── Background ──────────────────────────────────────────────────────────
 
-  void _drawBackground(Canvas canvas, Size size, double cellSize, Color boardBg, Color gridLineColor, Color cellBorderColor) {
+  void _drawBackground(Canvas canvas, Size size, double cellSize, Color boardBg) {
     // Board background
     final rrect = RRect.fromRectAndRadius(
       Offset.zero & size,
@@ -85,40 +79,6 @@ class ModernBoardPainter extends CustomPainter {
       rrect,
       Paint()..color = boardBg,
     );
-
-    // Subtle grid overlay for the path area
-    final gridPaint = Paint()
-      ..color = gridLineColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 0.5;
-
-    // Vertical path columns (6..8)
-    for (var x = 6; x <= 9; x++) {
-      canvas.drawLine(
-        Offset(x * cellSize, 0),
-        Offset(x * cellSize, size.height),
-        gridPaint,
-      );
-    }
-    // Horizontal path rows (6..8)
-    for (var y = 6; y <= 9; y++) {
-      canvas.drawLine(
-        Offset(0, y * cellSize),
-        Offset(size.width, y * cellSize),
-        gridPaint,
-      );
-    }
-
-    // Row/column lines inside the path
-    for (var i = 0; i <= 15; i++) {
-      final pos = i * cellSize;
-      // Only draw within path areas
-      if (i >= 6 && i <= 9) continue;
-      // Vertical inside horizontal path
-      canvas.drawLine(Offset(pos, 6 * cellSize), Offset(pos, 9 * cellSize), gridPaint);
-      // Horizontal inside vertical path
-      canvas.drawLine(Offset(6 * cellSize, pos), Offset(9 * cellSize, pos), gridPaint);
-    }
   }
 
   // ── Player Homes ────────────────────────────────────────────────────────
@@ -154,11 +114,11 @@ class ModernBoardPainter extends CustomPainter {
       Paint()..color = color.withValues(alpha: homeBgAlpha),
     );
 
-    // Border
+    // Yard Border - High contrast
     canvas.drawRRect(
       rr,
       Paint()
-        ..color = color.withValues(alpha: 0.4)
+        ..color = const Color(0xFF606060)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.5,
     );
@@ -211,72 +171,49 @@ class ModernBoardPainter extends CustomPainter {
 
   // ── Center Paths ────────────────────────────────────────────────────────
 
-  void _drawCenterPaths(Canvas canvas, Size size, double cellSize, Color centerPathBg, Color cellBorderColor) {
+  void _drawCenterPaths(Canvas canvas, Size size, double cellSize, Color centerPathBg) {
     final pathBg = Paint()..color = centerPathBg;
 
-    // Vertical path
+    // Vertical path background
     canvas.drawRect(
       Rect.fromLTWH(6 * cellSize, 0, 3 * cellSize, size.height),
       pathBg,
     );
-    // Horizontal path
+    // Horizontal path background
     canvas.drawRect(
       Rect.fromLTWH(0, 6 * cellSize, size.width, 3 * cellSize),
       pathBg,
     );
-
-    // Path cell borders
-    final cellBorder = Paint()
-      ..color = cellBorderColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 0.5;
-
-    for (var x = 6; x < 9; x++) {
-      for (var y = 0; y < 15; y++) {
-        canvas.drawRect(
-          Rect.fromLTWH(x * cellSize, y * cellSize, cellSize, cellSize),
-          cellBorder,
-        );
-      }
-    }
-    for (var y = 6; y < 9; y++) {
-      for (var x = 0; x < 15; x++) {
-        canvas.drawRect(
-          Rect.fromLTWH(x * cellSize, y * cellSize, cellSize, cellSize),
-          cellBorder,
-        );
-      }
-    }
   }
 
   // ── Home Stretch & Center ───────────────────────────────────────────────
 
-  void _drawHomeStretch(Canvas canvas, Size size, double cellSize, double stretchAlpha) {
+  void _drawHomeStretchFills(Canvas canvas, Size size, double cellSize, double stretchAlpha) {
     final center = Offset(7.5 * cellSize, 7.5 * cellSize);
 
     // Center triangles
-    _drawTriangle(
+    _drawTriangleFill(
       canvas,
       Offset(6 * cellSize, 6 * cellSize),
       center,
       Offset(6 * cellSize, 9 * cellSize),
       _playerColor(0),
     );
-    _drawTriangle(
+    _drawTriangleFill(
       canvas,
       Offset(6 * cellSize, 6 * cellSize),
       center,
       Offset(9 * cellSize, 6 * cellSize),
       _playerColor(1),
     );
-    _drawTriangle(
+    _drawTriangleFill(
       canvas,
       Offset(9 * cellSize, 6 * cellSize),
       center,
       Offset(9 * cellSize, 9 * cellSize),
       _playerColor(2),
     );
-    _drawTriangle(
+    _drawTriangleFill(
       canvas,
       Offset(6 * cellSize, 9 * cellSize),
       center,
@@ -285,17 +222,17 @@ class ModernBoardPainter extends CustomPainter {
     );
 
     // Home stretch coloured paths
-    _drawColoredStretch(
+    _drawColoredStretchFill(
         canvas, 1 * cellSize, 7 * cellSize, 5 * cellSize, cellSize, _playerColor(0), stretchAlpha);
-    _drawColoredStretch(
+    _drawColoredStretchFill(
         canvas, 7 * cellSize, 1 * cellSize, cellSize, 5 * cellSize, _playerColor(1), stretchAlpha);
-    _drawColoredStretch(
+    _drawColoredStretchFill(
         canvas, 9 * cellSize, 7 * cellSize, 5 * cellSize, cellSize, _playerColor(2), stretchAlpha);
-    _drawColoredStretch(
+    _drawColoredStretchFill(
         canvas, 7 * cellSize, 9 * cellSize, cellSize, 5 * cellSize, _playerColor(3), stretchAlpha);
   }
 
-  void _drawTriangle(
+  void _drawTriangleFill(
     Canvas canvas,
     Offset a,
     Offset b,
@@ -314,16 +251,9 @@ class ModernBoardPainter extends CustomPainter {
         ..color = color.withValues(alpha: 0.15)
         ..style = PaintingStyle.fill,
     );
-    canvas.drawPath(
-      path,
-      Paint()
-        ..color = color.withValues(alpha: 0.3)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1,
-    );
   }
 
-  void _drawColoredStretch(
+  void _drawColoredStretchFill(
     Canvas canvas,
     double x,
     double y,
@@ -337,12 +267,54 @@ class ModernBoardPainter extends CustomPainter {
       rect,
       Paint()..color = color.withValues(alpha: stretchAlpha),
     );
+  }
+
+  // ── Grid Lines ──────────────────────────────────────────────────────────
+
+  void _drawAllGridLines(Canvas canvas, Size size, double cellSize, Color cellBorderColor) {
+    final gridPaint = Paint()
+      ..color = cellBorderColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0;
+
+    // Draw borders for all cells in vertical path (cols 6..8)
+    for (var x = 6; x < 9; x++) {
+      for (var y = 0; y < 15; y++) {
+        canvas.drawRect(
+          Rect.fromLTWH(x * cellSize, y * cellSize, cellSize, cellSize),
+          gridPaint,
+        );
+      }
+    }
+
+    // Draw borders for all cells in horizontal path (rows 6..8)
+    for (var y = 6; y < 9; y++) {
+      for (var x = 0; x < 15; x++) {
+        canvas.drawRect(
+          Rect.fromLTWH(x * cellSize, y * cellSize, cellSize, cellSize),
+          gridPaint,
+        );
+      }
+    }
+
+    // Draw the center triangle outlines
+    final center = Offset(7.5 * cellSize, 7.5 * cellSize);
+    final centerPaint = Paint()
+      ..color = cellBorderColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.2;
+
+    final path = Path()
+      ..moveTo(6 * cellSize, 6 * cellSize)
+      ..lineTo(9 * cellSize, 9 * cellSize)
+      ..moveTo(6 * cellSize, 9 * cellSize)
+      ..lineTo(9 * cellSize, 6 * cellSize);
+    canvas.drawPath(path, centerPaint);
+
+    // Border around the center 3x3 square
     canvas.drawRect(
-      rect,
-      Paint()
-        ..color = color.withValues(alpha: stretchAlpha * 2.0)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 0.8,
+      Rect.fromLTWH(6 * cellSize, 6 * cellSize, 3 * cellSize, 3 * cellSize),
+      centerPaint,
     );
   }
 
@@ -365,17 +337,38 @@ class ModernBoardPainter extends CustomPainter {
       // Glow circle
       canvas.drawCircle(
         center,
-        cellSize * 0.4,
+        cellSize * 0.42,
         Paint()
-          ..color = color.withValues(alpha: 0.15)
+          ..color = color.withValues(alpha: 0.2)
           ..style = PaintingStyle.fill,
       );
 
-      // Star
-      _drawStar(canvas, center, cellSize * 0.28, Paint()
-        ..color = color.withValues(alpha: 0.6)
+      // Visible outline for the safe spot cell itself
+      final outlinePaint = Paint()
+        ..color = const Color(0xFF606060)
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.2,
+        ..strokeWidth = 1.5;
+      canvas.drawRect(
+        Rect.fromLTWH(spot.x * cellSize, spot.y * cellSize, cellSize, cellSize),
+        outlinePaint,
+      );
+
+      // Darker star icon: lerp color with black to make it darker and more visible
+      final starColor = color == LudoColors.textMedium
+          ? const Color(0xFF404040)
+          : Color.lerp(color, Colors.black, 0.45)!;
+
+      // Draw star fill with some opacity
+      _drawStar(canvas, center, cellSize * 0.28, Paint()
+        ..color = starColor.withValues(alpha: 0.25)
+        ..style = PaintingStyle.fill,
+      );
+
+      // Draw star outline (darker)
+      _drawStar(canvas, center, cellSize * 0.28, Paint()
+        ..color = starColor
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.6,
       );
     }
   }
@@ -409,41 +402,96 @@ class ModernBoardPainter extends CustomPainter {
             ? players[currentPlayerIndex].id
             : null;
 
-    // Count tokens per position (for stack offsets)
-    final Map<BoardPosition, int> tokenCounts = {};
+    // Group all tokens of all players by their board position
+    final Map<BoardPosition, List<Token>> positionTokens = {};
+    // Map to find owner player for each token
+    final Map<Token, Player> tokenPlayer = {};
+
     for (final player in players) {
       for (final token in player.tokens) {
         if (token.position != null) {
-          tokenCounts[token.position!] =
-              (tokenCounts[token.position!] ?? 0) + 1;
+          positionTokens.putIfAbsent(token.position!, () => []).add(token);
+          tokenPlayer[token] = player;
         }
       }
     }
 
-    for (final player in players) {
-      for (final token in player.tokens) {
-        if (token.position == null) continue;
+    for (final entry in positionTokens.entries) {
+      final pos = entry.key;
+      final tokensAtPos = entry.value;
 
-        var center = Offset(
-          (token.position!.x + 0.5) * cellSize,
-          (token.position!.y + 0.5) * cellSize,
-        );
+      final isHome = tokensAtPos.first.isHome;
+      if (isHome) {
+        // In the home yard, draw tokens in their respective slots individually without stacking
+        for (final token in tokensAtPos) {
+          final player = tokenPlayer[token]!;
+          final center = Offset(
+            (pos.x + 0.5) * cellSize,
+            (pos.y + 0.5) * cellSize,
+          );
 
-        final count = tokenCounts[token.position!] ?? 1;
-        if (count > 1) {
-          final idx = player.tokens.indexOf(token);
-          final off = (idx % count) * cellSize * 0.1;
-          center = center + Offset(-off, -off);
+          _draw3DToken(
+            canvas,
+            center,
+            cellSize * 0.38,
+            player.color,
+            validTokens.contains(token),
+            currentPlayerId == player.id,
+            count: 1,
+          );
         }
+      } else {
+        // On the path
+        // Check if all tokens at this cell belong to the same player
+        final firstTokenOwner = tokenPlayer[tokensAtPos.first]!;
+        final allSameOwner = tokensAtPos.every((t) => tokenPlayer[t]?.id == firstTokenOwner.id);
 
-        _draw3DToken(
-          canvas,
-          center,
-          cellSize * 0.38,
-          player.color,
-          validTokens.contains(token),
-          currentPlayerId == player.id,
-        );
+        if (allSameOwner) {
+          // Stacked same-player tokens: draw as a single unit at the cell center with a number badge
+          final center = Offset(
+            (pos.x + 0.5) * cellSize,
+            (pos.y + 0.5) * cellSize,
+          );
+
+          final isOnPath = !tokensAtPos.first.isHome && !tokensAtPos.first.isFinished;
+          final radius = isOnPath ? cellSize * 0.26 : cellSize * 0.38; // Smaller radius on path
+
+          _draw3DToken(
+            canvas,
+            center,
+            radius,
+            firstTokenOwner.color,
+            validTokens.any((vt) => tokensAtPos.any((t) => t.id == vt.id)),
+            currentPlayerId == firstTokenOwner.id,
+            count: tokensAtPos.length,
+          );
+        } else {
+          // Different players coexisting (on safe cell): draw overlapping with offset
+          final count = tokensAtPos.length;
+          for (var idx = 0; idx < count; idx++) {
+            final token = tokensAtPos[idx];
+            final player = tokenPlayer[token]!;
+            var center = Offset(
+              (pos.x + 0.5) * cellSize,
+              (pos.y + 0.5) * cellSize,
+            );
+            final off = idx * cellSize * 0.1;
+            center = center + Offset(-off, -off);
+
+            final isOnPath = !token.isHome && !token.isFinished;
+            final radius = isOnPath ? cellSize * 0.26 : cellSize * 0.38;
+
+            _draw3DToken(
+              canvas,
+              center,
+              radius,
+              player.color,
+              validTokens.contains(token),
+              currentPlayerId == player.id,
+              count: 1,
+            );
+          }
+        }
       }
     }
 
@@ -456,8 +504,9 @@ class ModernBoardPainter extends CustomPainter {
     double radius,
     Color color,
     bool isValid,
-    bool isCurrentPlayer,
-  ) {
+    bool isCurrentPlayer, {
+    int count = 1,
+  }) {
     // Shadow (softer shadow on light backgrounds)
     canvas.drawCircle(
       center + const Offset(1.5, 3),
@@ -531,6 +580,54 @@ class ModernBoardPainter extends CustomPainter {
         Paint()..color = Colors.white.withValues(alpha: 0.7),
       );
     }
+
+    // Stacked count badge if count > 1
+    if (count > 1) {
+      final badgeCenter = center + Offset(radius * 0.7, -radius * 0.7);
+      final badgeRadius = radius * 0.45;
+
+      // Shadow
+      canvas.drawCircle(
+        badgeCenter + const Offset(1, 1),
+        badgeRadius,
+        Paint()..color = Colors.black.withValues(alpha: 0.3),
+      );
+
+      // Badge background
+      canvas.drawCircle(
+        badgeCenter,
+        badgeRadius,
+        Paint()..color = const Color(0xFF7C4DFF), // Premium purple
+      );
+
+      // Border
+      canvas.drawCircle(
+        badgeCenter,
+        badgeRadius,
+        Paint()
+          ..color = Colors.white
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.0,
+      );
+
+      // Count number text
+      final textPainter = TextPainter(
+        text: TextSpan(
+          text: '$count',
+          style: TextStyle(
+            fontSize: badgeRadius * 1.3,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout();
+
+      textPainter.paint(
+        canvas,
+        badgeCenter - Offset(textPainter.width / 2, textPainter.height / 2),
+      );
+    }
   }
 
   // ── Capture Overlay ─────────────────────────────────────────────────────
@@ -543,10 +640,6 @@ class ModernBoardPainter extends CustomPainter {
       (effect.position.x + 0.5) * cellSize,
       (effect.position.y + 0.5) * cellSize,
     );
-    final homeCenter = Offset(
-      (effect.homePosition.x + 0.5) * cellSize,
-      (effect.homePosition.y + 0.5) * cellSize,
-    );
 
     final tokenColor = players
         .firstWhere(
@@ -557,28 +650,7 @@ class ModernBoardPainter extends CustomPainter {
         )
         .color;
 
-    final currentCenter =
-        Offset.lerp(startCenter, homeCenter, captureProgress) ?? homeCenter;
-    final returnRadius =
-        cellSize * (0.32 - 0.10 * captureProgress).clamp(0.18, 0.32);
     final burstAlpha = (1 - captureProgress).clamp(0.0, 1.0);
-
-    // Trail
-    final trail = Path()
-      ..moveTo(startCenter.dx, startCenter.dy)
-      ..quadraticBezierTo(
-        (startCenter.dx + homeCenter.dx) / 2,
-        (startCenter.dy + homeCenter.dy) / 2 - cellSize * 0.6,
-        homeCenter.dx,
-        homeCenter.dy,
-      );
-    canvas.drawPath(
-      trail,
-      Paint()
-        ..color = tokenColor.withValues(alpha: 0.28 * burstAlpha)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2.5 * (1 - captureProgress),
-    );
 
     // Burst ring (subtle dark burst ring on light mode)
     canvas.drawCircle(
@@ -605,8 +677,38 @@ class ModernBoardPainter extends CustomPainter {
       );
     }
 
-    // Moving token
-    _draw3DToken(canvas, currentCenter, returnRadius, tokenColor, false, false);
+    // Draw all returning tokens in the capture effect list
+    for (final capToken in effect.tokens) {
+      final homeCenter = Offset(
+        (capToken.homePosition.x + 0.5) * cellSize,
+        (capToken.homePosition.y + 0.5) * cellSize,
+      );
+
+      final currentCenter =
+          Offset.lerp(startCenter, homeCenter, captureProgress) ?? homeCenter;
+      final returnRadius =
+          cellSize * (0.32 - 0.10 * captureProgress).clamp(0.18, 0.32);
+
+      // Trail
+      final trail = Path()
+        ..moveTo(startCenter.dx, startCenter.dy)
+        ..quadraticBezierTo(
+          (startCenter.dx + homeCenter.dx) / 2,
+          (startCenter.dy + homeCenter.dy) / 2 - cellSize * 0.6,
+          homeCenter.dx,
+          homeCenter.dy,
+        );
+      canvas.drawPath(
+        trail,
+        Paint()
+          ..color = tokenColor.withValues(alpha: 0.28 * burstAlpha)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2.5 * (1 - captureProgress),
+      );
+
+      // Moving token
+      _draw3DToken(canvas, currentCenter, returnRadius, tokenColor, false, false, count: 1);
+    }
   }
 
   // ── Repaint ─────────────────────────────────────────────────────────────

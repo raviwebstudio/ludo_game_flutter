@@ -1,9 +1,10 @@
+import 'package:flutter/material.dart';
 import 'package:ludo_game/domain/models/board_position.dart';
 import 'package:ludo_game/domain/models/capture_result.dart';
 import 'package:ludo_game/domain/models/player.dart';
 
 abstract class GameRepository {
-  List<Player> initializePlayers(int playerCount);
+  List<Player> initializePlayers(int playerCount, {List<Color>? customColors});
   bool isValidMove(
     Player player,
     Token token,

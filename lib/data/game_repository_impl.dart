@@ -54,23 +54,70 @@ class GameRepositoryImpl implements GameRepository {
   };
 
   @override
-  List<Player> initializePlayers(int playerCount) {
-    return List.generate(
-      playerCount,
-      (index) => Player(
-        id: index,
-        color: playerColors[index],
-        name: PlayerPrefs.playerName(index),
-        tokens: List.generate(
-          4,
-          (tokenIndex) => Token(
-            id: tokenIndex,
-            position: _playerHomes[index]![tokenIndex],
+  List<Player> initializePlayers(int playerCount, {List<Color>? customColors}) {
+    final colors = customColors ?? playerColors;
+    if (playerCount == 2) {
+      return [
+        Player(
+          id: 0,
+          color: colors[0],
+          name: PlayerPrefs.playerName(0),
+          tokens: List.generate(
+            4,
+            (tokenIndex) => Token(
+              id: tokenIndex,
+              position: _playerHomes[0]![tokenIndex],
+            ),
           ),
+          path: _playerPaths[0]!,
         ),
-        path: _playerPaths[index]!,
-      ),
-    );
+        Player(
+          id: 2,
+          color: colors[1],
+          name: PlayerPrefs.playerName(1),
+          tokens: List.generate(
+            4,
+            (tokenIndex) => Token(
+              id: tokenIndex,
+              position: _playerHomes[2]![tokenIndex],
+            ),
+          ),
+          path: _playerPaths[2]!,
+        ),
+      ];
+    } else {
+      return List.generate(
+        playerCount,
+        (index) => Player(
+          id: index,
+          color: colors[index],
+          name: PlayerPrefs.playerName(index),
+          tokens: List.generate(
+            4,
+            (tokenIndex) => Token(
+              id: tokenIndex,
+              position: _playerHomes[index]![tokenIndex],
+            ),
+          ),
+          path: _playerPaths[index]!,
+        ),
+      );
+    }
+  }
+
+  bool isBlockedCell(BoardPosition position, List<Player> players) {
+    if (isSafeZone(position)) return false;
+
+    // Count how many different players have tokens on this position
+    final uniquePlayersOnPosition = <int>{};
+    for (final player in players) {
+      for (final token in player.tokens) {
+        if (!token.isHome && !token.isFinished && token.position == position) {
+          uniquePlayersOnPosition.add(player.id);
+        }
+      }
+    }
+    return uniquePlayersOnPosition.length >= 2;
   }
 
   @override
@@ -93,21 +140,18 @@ class GameRepositoryImpl implements GameRepository {
       return true;
     }
 
+    // Check if any cells along the path (excluding current cell, up to destination cell) are blocked cells
     final firstPathPosition = token.isHome ? 0 : token.pathPosition + 1;
     for (var pathPosition = firstPathPosition;
         pathPosition <= nextPathPosition;
         pathPosition++) {
       final boardPosition = player.path[pathPosition];
-      if (!canPassBlockade(player, boardPosition, players)) {
+      if (isBlockedCell(boardPosition, players)) {
         return false;
       }
     }
 
-    return canLandOnBlockade(
-      player,
-      player.path[nextPathPosition],
-      players,
-    );
+    return true;
   }
 
   @override
@@ -130,7 +174,8 @@ class GameRepositoryImpl implements GameRepository {
       return player;
     }
 
-    if (token.isHome && diceValue == 6) {
+    final isHome = token.isHome;
+    if (isHome && diceValue == 6) {
       newTokens[tokenIndex] = token.copyWith(
         isHome: false,
         pathPosition: 0,
@@ -261,11 +306,7 @@ class GameRepositoryImpl implements GameRepository {
 
   @override
   bool isBlockade(Player player, BoardPosition position) {
-    final tokensOnPosition = player.tokens.where((token) {
-      return !token.isHome && !token.isFinished && token.position == position;
-    }).length;
-
-    return tokensOnPosition >= 2;
+    return false; // Deprecated in favor of isBlockedCell
   }
 
   @override
@@ -274,13 +315,7 @@ class GameRepositoryImpl implements GameRepository {
     BoardPosition position,
     List<Player> players,
   ) {
-    // Safe zones cannot form blockades — any tokens can coexist on stars
-    if (isSafeZone(position)) return true;
-    for (final player in players) {
-      if (player.id == movingPlayer.id) continue;
-      if (isBlockade(player, position)) return false;
-    }
-    return true;
+    return true; // Checked via isBlockedCell
   }
 
   @override
@@ -289,9 +324,7 @@ class GameRepositoryImpl implements GameRepository {
     BoardPosition position,
     List<Player> players,
   ) {
-    // Safe zones are always landable regardless of token count
-    if (isSafeZone(position)) return true;
-    return canPassBlockade(movingPlayer, position, players);
+    return true; // Checked via isBlockedCell
   }
 
   @override

@@ -127,11 +127,42 @@ class _GameBoardState extends State<GameBoard> with TickerProviderStateMixin {
     final x = (localPos.dx / cellSize).floor().clamp(0, 14);
     final y = (localPos.dy / cellSize).floor().clamp(0, 14);
 
-    for (final token in widget.validTokens) {
-      final pos = token.position;
-      if (pos != null && pos.x == x && pos.y == y) {
-        context.read<GameBloc>().add(SelectToken(token));
-        break;
+    final tokensOnCell = widget.validTokens.where((t) => t.position?.x == x && t.position?.y == y).toList();
+
+    if (tokensOnCell.isNotEmpty) {
+      if (tokensOnCell.length == 1) {
+        context.read<GameBloc>().add(SelectToken(tokensOnCell.first));
+      } else {
+        // Find closest by offset center
+        Token? closestToken;
+        double minDistance = double.infinity;
+        for (final token in tokensOnCell) {
+          final pos = token.position!;
+          var center = Offset(
+            (pos.x + 0.5) * cellSize,
+            (pos.y + 0.5) * cellSize,
+          );
+
+          // Check if there are other players' tokens on this cell
+          // (If so, we draw this token with an offset)
+          final allTokensAtPos = widget.players.expand((p) => p.tokens).where((t) => t.position == pos).toList();
+          final uniquePlayerIds = allTokensAtPos.map((t) => widget.players.firstWhere((p) => p.tokens.contains(t)).id).toSet();
+
+          if (uniquePlayerIds.length >= 2) {
+            final idx = allTokensAtPos.indexOf(token);
+            final off = idx * cellSize * 0.1;
+            center = center + Offset(-off, -off);
+          }
+
+          final distance = (localPos - center).distance;
+          if (distance < minDistance) {
+            minDistance = distance;
+            closestToken = token;
+          }
+        }
+        if (closestToken != null) {
+          context.read<GameBloc>().add(SelectToken(closestToken));
+        }
       }
     }
   }

@@ -34,7 +34,7 @@ class _CapturingRepository implements GameRepository {
   static const _capturedHome = BoardPosition(5, 5);
 
   @override
-  List<Player> initializePlayers(int playerCount) {
+  List<Player> initializePlayers(int playerCount, {List<Color>? customColors}) {
     return [
       Player(
         id: 0,

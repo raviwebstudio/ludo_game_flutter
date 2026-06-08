@@ -104,12 +104,15 @@ void main() {
       expect(captureResult.players[1].tokens.first.isHome, isFalse);
     });
 
-    test('opponent blockades cannot be landed on or passed through', () {
+    test('same-opponent stacked tokens can be landed on, but mixed-opponent tokens block movement', () {
       final repository = GameRepositoryImpl();
-      final players = repository.initializePlayers(2);
+      final players = repository.initializePlayers(3); // Need 3 players to form a mixed blockade
       final redPlayer = players[0];
       final greenPlayer = players[1];
+      final yellowPlayer = players[2];
+
       final blockadePosition = redPlayer.path[1];
+
       final movingToken = redPlayer.tokens.first.copyWith(
         isHome: false,
         pathPosition: 0,
@@ -118,6 +121,8 @@ void main() {
       final redPlayerOnTrack = redPlayer.copyWith(
         tokens: [movingToken, ...redPlayer.tokens.skip(1)],
       );
+
+      // 1. Test same opponent stack (not blocked)
       final greenBlockadeTokens = List.of(greenPlayer.tokens);
       greenBlockadeTokens[0] = greenBlockadeTokens[0].copyWith(
         isHome: false,
@@ -132,12 +137,39 @@ void main() {
       final greenPlayerWithBlockade = greenPlayer.copyWith(
         tokens: greenBlockadeTokens,
       );
-      final boardPlayers = [redPlayerOnTrack, greenPlayerWithBlockade];
 
+      var boardPlayers = [redPlayerOnTrack, greenPlayerWithBlockade, yellowPlayer];
+
+      // Moving to it (1 step) or passing it (2 steps) is VALID because they are of the same opponent
       expect(
-        repository.isBlockade(greenPlayerWithBlockade, blockadePosition),
+        repository.isValidMove(redPlayerOnTrack, movingToken, 1, boardPlayers),
         isTrue,
       );
+      expect(
+        repository.isValidMove(redPlayerOnTrack, movingToken, 2, boardPlayers),
+        isTrue,
+      );
+
+      // 2. Test mixed opponent stack (blocked)
+      final greenTokens = List.of(greenPlayer.tokens);
+      greenTokens[0] = greenTokens[0].copyWith(
+        isHome: false,
+        pathPosition: 0,
+        position: blockadePosition,
+      );
+      final yellowTokens = List.of(yellowPlayer.tokens);
+      yellowTokens[0] = yellowTokens[0].copyWith(
+        isHome: false,
+        pathPosition: 0,
+        position: blockadePosition,
+      );
+
+      final updatedGreenPlayer = greenPlayer.copyWith(tokens: greenTokens);
+      final updatedYellowPlayer = yellowPlayer.copyWith(tokens: yellowTokens);
+
+      boardPlayers = [redPlayerOnTrack, updatedGreenPlayer, updatedYellowPlayer];
+
+      // Moving to it (1 step) or passing it (2 steps) is INVALID because they belong to two different opponents
       expect(
         repository.isValidMove(redPlayerOnTrack, movingToken, 1, boardPlayers),
         isFalse,

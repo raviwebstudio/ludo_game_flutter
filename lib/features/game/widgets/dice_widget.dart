@@ -52,8 +52,8 @@ class _DiceWidgetState extends State<DiceWidget> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    _displayValue = widget.value;
-    _lastSettled = widget.value;
+    _displayValue = widget.value ?? 1; // Default to 1 instead of null
+    _lastSettled = widget.value ?? 1;
 
     _rollCtrl = AnimationController(vsync: this, duration: _rollDuration);
     _bounceCtrl = AnimationController(
@@ -81,11 +81,9 @@ class _DiceWidgetState extends State<DiceWidget> with TickerProviderStateMixin {
     super.didUpdateWidget(old);
     if (_isRolling) return;
 
-    if (widget.value == null && old.value != null) {
-      setState(() {
-        _displayValue = null;
-        _lastSettled = null;
-      });
+    if (widget.value == null) {
+      // Do NOT clear _displayValue and _lastSettled to null.
+      // This keeps the last rolled value visible on the board and avoids the white flash.
       return;
     }
 
@@ -133,7 +131,7 @@ class _DiceWidgetState extends State<DiceWidget> with TickerProviderStateMixin {
       _rollCtrl.reset();
       setState(() {
         _isRolling = false;
-        _displayValue = widget.value;
+        _displayValue = widget.value ?? 1;
       });
     }
   }
@@ -167,7 +165,7 @@ class _DiceWidgetState extends State<DiceWidget> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final canTap = widget.enabled && !_isRolling;
-    final faceValue = _displayValue ?? widget.value;
+    final faceValue = _displayValue ?? widget.value ?? 1;
     final activeColor = widget.activeColor ?? LudoColors.purple;
 
     return GestureDetector(
@@ -186,43 +184,39 @@ class _DiceWidgetState extends State<DiceWidget> with TickerProviderStateMixin {
           final scale = rollScale * _bounceScale.value;
           final glowOpacity = _glowCtrl.value;
 
-          return Transform.rotate(
-            angle: rotation,
-            child: Transform.scale(
-              scale: scale,
-              child: Container(
-                width: widget.size,
-                height: widget.size,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(widget.size * 0.18),
-                  boxShadow: [
-                    // Bottom shadow for 3D depth
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.35),
-                      blurRadius: widget.size * 0.15,
-                      offset: Offset(0, widget.size * 0.06),
-                      spreadRadius: widget.size * 0.01,
+          return Container(
+            width: widget.size,
+            height: widget.size,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(widget.size * 0.18),
+              boxShadow: [
+                // Bottom shadow for 3D depth
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.35),
+                  blurRadius: widget.size * 0.15,
+                  offset: Offset(0, widget.size * 0.06),
+                  spreadRadius: widget.size * 0.01,
+                ),
+                // Colored glow when active
+                if (widget.isActivePlayer)
+                  BoxShadow(
+                    color: activeColor.withValues(
+                      alpha: 0.2 + glowOpacity * 0.15,
                     ),
-                    // Colored glow when active
-                    if (widget.isActivePlayer)
-                      BoxShadow(
-                        color: activeColor.withValues(
-                          alpha: 0.2 + glowOpacity * 0.15,
-                        ),
-                        blurRadius: widget.size * 0.3,
-                        spreadRadius: widget.size * 0.02,
-                      ),
-                  ],
-                ),
-                child: CustomPaint(
-                  painter: _Dice3DPainter(
-                    faceValue: faceValue ?? 0,
-                    cornerRadius: widget.size * 0.18,
-                    isEnabled: widget.enabled,
+                    blurRadius: widget.size * 0.3,
+                    spreadRadius: widget.size * 0.02,
                   ),
-                  size: Size(widget.size, widget.size),
-                ),
+              ],
+            ),
+            child: CustomPaint(
+              painter: _Dice3DPainter(
+                faceValue: faceValue,
+                cornerRadius: widget.size * 0.18,
+                isEnabled: widget.enabled,
+                rotation: rotation,
+                scale: scale,
               ),
+              size: Size(widget.size, widget.size),
             ),
           );
         },
@@ -236,11 +230,15 @@ class _Dice3DPainter extends CustomPainter {
   final int faceValue;
   final double cornerRadius;
   final bool isEnabled;
+  final double rotation;
+  final double scale;
 
   _Dice3DPainter({
     required this.faceValue,
     required this.cornerRadius,
     required this.isEnabled,
+    required this.rotation,
+    required this.scale,
   });
 
   @override
@@ -300,7 +298,6 @@ class _Dice3DPainter extends CustomPainter {
 
     // --- Draw Pips ---
     if (faceValue < 1 || faceValue > 6) {
-      // Show a dice icon when no value
       _drawPlaceholderIcon(canvas, size);
       return;
     }
@@ -317,6 +314,15 @@ class _Dice3DPainter extends CustomPainter {
     final pipShadowPaint = Paint()
       ..color = Colors.black.withValues(alpha: 0.12)
       ..style = PaintingStyle.fill;
+
+    final cx = size.width / 2;
+    final cy = size.height / 2;
+
+    canvas.save();
+    canvas.translate(cx, cy);
+    canvas.rotate(rotation);
+    canvas.scale(scale);
+    canvas.translate(-cx, -cy);
 
     final positions = _getPipPositions(faceValue, size);
     for (final pos in positions) {
@@ -335,6 +341,7 @@ class _Dice3DPainter extends CustomPainter {
         Paint()..color = Colors.white.withValues(alpha: 0.3),
       );
     }
+    canvas.restore();
   }
 
   List<Offset> _getPipPositions(int value, Size size) {
@@ -392,6 +399,8 @@ class _Dice3DPainter extends CustomPainter {
   @override
   bool shouldRepaint(_Dice3DPainter oldDelegate) {
     return oldDelegate.faceValue != faceValue ||
-        oldDelegate.isEnabled != isEnabled;
+        oldDelegate.isEnabled != isEnabled ||
+        oldDelegate.rotation != rotation ||
+        oldDelegate.scale != scale;
   }
 }

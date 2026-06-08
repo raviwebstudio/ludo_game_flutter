@@ -25,6 +25,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   int _totalGames = 0;
   int _wins = 0;
   int _winStreak = 0;
+  int _coins = 25450;
 
   StreamSubscription<void>? _changesSubscription;
 
@@ -49,6 +50,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _totalGames = PlayerPrefs.totalGames;
       _wins = PlayerPrefs.wins;
       _winStreak = PlayerPrefs.winStreak;
+      _coins = PlayerPrefs.coins;
     });
   }
 
@@ -75,6 +77,56 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
     if (res != null && res.trim().isNotEmpty) {
       await PlayerPrefs.setPlayerName(0, res.trim());
+    }
+  }
+
+  Future<void> _editCoins() async {
+    final controller = TextEditingController(text: '$_coins');
+    final res = await showDialog<String?>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Edit Coins'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          keyboardType: TextInputType.number,
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(context, controller.text), child: const Text('Save')),
+        ],
+      ),
+    );
+    if (res != null) {
+      final parsed = int.tryParse(res.trim());
+      if (parsed != null && parsed >= 0) {
+        await PlayerPrefs.setCoins(parsed);
+      }
+    }
+  }
+
+  Future<void> _editStat(String label, int currentValue, Future<void> Function(int) saveFunc) async {
+    final controller = TextEditingController(text: '$currentValue');
+    final res = await showDialog<String?>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Edit $label'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          keyboardType: TextInputType.number,
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(context, controller.text), child: const Text('Save')),
+        ],
+      ),
+    );
+    if (res != null) {
+      final parsed = int.tryParse(res.trim());
+      if (parsed != null && parsed >= 0) {
+        await saveFunc(parsed);
+      }
     }
   }
 
@@ -211,19 +263,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                         ),
                         const SizedBox(height: 4),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.monetization_on, color: LudoColors.gold, size: 20),
-                            const SizedBox(width: 6),
-                            Text(
-                              '25,450 Coins',
-                              style: LudoTextStyles.bodyLarge.copyWith(
-                                color: LudoColors.gold,
-                                fontWeight: FontWeight.w700,
+                        GestureDetector(
+                          onTap: _editCoins,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.monetization_on, color: LudoColors.gold, size: 20),
+                              const SizedBox(width: 6),
+                              Text(
+                                '$_coins Coins',
+                                style: LudoTextStyles.bodyLarge.copyWith(
+                                  color: LudoColors.gold,
+                                  fontWeight: FontWeight.w700,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ],
                     ),
@@ -319,10 +374,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     mainAxisSpacing: 12,
                     childAspectRatio: 1.5,
                     children: [
-                      _buildStatCard('Total Games', '$_totalGames', Icons.sports_esports, LudoColors.softBlue),
-                      _buildStatCard('Wins', '$_wins', Icons.emoji_events, LudoColors.gold),
+                      _buildStatCard('Total Games', '$_totalGames', Icons.sports_esports, LudoColors.softBlue, onTap: () => _editStat('Total Games', _totalGames, PlayerPrefs.setTotalGames)),
+                      _buildStatCard('Wins', '$_wins', Icons.emoji_events, LudoColors.gold, onTap: () => _editStat('Wins', _wins, PlayerPrefs.setWins)),
                       _buildStatCard('Win Rate', '${PlayerPrefs.winRate.toStringAsFixed(1)}%', Icons.percent, LudoColors.brightBlue),
-                      _buildStatCard('Win Streak', '$_winStreak', Icons.local_fire_department, LudoColors.redToken),
+                      _buildStatCard('Win Streak', '$_winStreak', Icons.local_fire_department, LudoColors.redToken, onTap: () => _editStat('Win Streak', _winStreak, PlayerPrefs.setWinStreak)),
                     ],
                   ).animate().fadeIn(delay: 200.ms, duration: 400.ms),
 
@@ -344,31 +399,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildStatCard(String label, String value, IconData icon, Color color) {
-    return GlassMorphism(
-      opacity: 0.06,
-      blur: 12,
-      borderRadius: BorderRadius.circular(LudoDimensions.radius16),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                label,
-                style: LudoTextStyles.labelSmall.copyWith(color: LudoColors.textMedium),
-              ),
-              Icon(icon, color: color, size: 20),
-            ],
-          ),
-          Text(
-            value,
-            style: LudoTextStyles.displayMedium.copyWith(fontSize: 24),
-          ),
-        ],
+  Widget _buildStatCard(String label, String value, IconData icon, Color color, {VoidCallback? onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: GlassMorphism(
+        opacity: 0.06,
+        blur: 12,
+        borderRadius: BorderRadius.circular(LudoDimensions.radius16),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  label,
+                  style: LudoTextStyles.labelSmall.copyWith(color: LudoColors.textMedium),
+                ),
+                Icon(icon, color: color, size: 20),
+              ],
+            ),
+            Text(
+              value,
+              style: LudoTextStyles.displayMedium.copyWith(fontSize: 24),
+            ),
+          ],
+        ),
       ),
     );
   }

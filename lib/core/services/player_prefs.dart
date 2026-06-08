@@ -47,6 +47,31 @@ class PlayerPrefs {
     _changeController.add(null);
   }
 
+  static const _coinsKey = '${_keyPrefix}coins';
+  static const _player1ColorKey = '${_keyPrefix}player1_color';
+
+  static int get coins => _prefs?.getInt(_coinsKey) ?? 25450;
+  static Future<void> setCoins(int value) async {
+    await _prefs?.setInt(_coinsKey, value);
+    _changeController.add(null);
+  }
+
+  static int get player1ColorValue => _prefs?.getInt(_player1ColorKey) ?? 0xFFE74C3C;
+  static Future<void> setPlayer1ColorValue(int value) async {
+    await _prefs?.setInt(_player1ColorKey, value);
+    _changeController.add(null);
+  }
+
+  static Future<void> setTotalGames(int value) async {
+    await _prefs?.setInt(_totalGamesKey, value);
+    _changeController.add(null);
+  }
+
+  static Future<void> setWins(int value) async {
+    await _prefs?.setInt(_winsKey, value);
+    _changeController.add(null);
+  }
+
   static double get winRate {
     final tg = totalGames;
     if (tg == 0) return 0.0;
@@ -58,6 +83,7 @@ class PlayerPrefs {
     await _prefs?.remove(_totalGamesKey);
     await _prefs?.remove(_winsKey);
     await _prefs?.remove(_winStreakKey);
+    await _prefs?.remove(_coinsKey);
     _changeController.add(null);
   }
 

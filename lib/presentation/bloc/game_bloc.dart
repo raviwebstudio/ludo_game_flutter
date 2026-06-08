@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:developer';
+import 'package:flutter/material.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
@@ -19,10 +20,11 @@ abstract class GameEvent extends Equatable {
 
 class StartGame extends GameEvent {
   final int playerCount;
-  StartGame(this.playerCount);
+  final List<Color>? playerColors;
+  StartGame(this.playerCount, {this.playerColors});
 
   @override
-  List<Object?> get props => [playerCount];
+  List<Object?> get props => [playerCount, playerColors];
 }
 
 class RollDice extends GameEvent {
@@ -42,47 +44,68 @@ class SelectToken extends GameEvent {
   List<Object?> get props => [token];
 }
 
+class CapturedTokenInfo extends Equatable {
+  final int tokenId;
+  final BoardPosition homePosition;
+
+  const CapturedTokenInfo({
+    required this.tokenId,
+    required this.homePosition,
+  });
+
+  factory CapturedTokenInfo.fromJson(Map<String, dynamic> json) {
+    return CapturedTokenInfo(
+      tokenId: json['tokenId'] as int,
+      homePosition: BoardPosition.fromJson(json['homePosition'] as Map<String, dynamic>),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'tokenId': tokenId,
+        'homePosition': homePosition.toJson(),
+      };
+
+  @override
+  List<Object?> get props => [tokenId, homePosition];
+}
+
 class CaptureEffect extends Equatable {
   final int id;
   final int playerId;
-  final int tokenId;
+  final List<CapturedTokenInfo> tokens;
   final BoardPosition position;
-  final BoardPosition homePosition;
 
   const CaptureEffect({
     required this.id,
     required this.playerId,
-    required this.tokenId,
+    required this.tokens,
     required this.position,
-    required this.homePosition,
   });
 
   factory CaptureEffect.fromJson(Map<String, dynamic> json) {
     return CaptureEffect(
       id: json['id'] as int,
       playerId: json['playerId'] as int,
-      tokenId: json['tokenId'] as int,
+      tokens: (json['tokens'] as List<dynamic>)
+          .map((value) => CapturedTokenInfo.fromJson(value as Map<String, dynamic>))
+          .toList(),
       position: BoardPosition.fromJson(json['position'] as Map<String, dynamic>),
-      homePosition:
-          BoardPosition.fromJson(json['homePosition'] as Map<String, dynamic>),
     );
   }
 
   Map<String, dynamic> toJson() => {
         'id': id,
         'playerId': playerId,
-        'tokenId': tokenId,
+        'tokens': tokens.map((t) => t.toJson()).toList(),
         'position': position.toJson(),
-        'homePosition': homePosition.toJson(),
       };
 
   @override
   List<Object?> get props => [
         id,
         playerId,
-        tokenId,
+        tokens,
         position,
-        homePosition,
       ];
 }
 
@@ -98,6 +121,7 @@ class GameState extends Equatable {
   final List<Token> validTokens;
   final CaptureEffect? captureEffect;
   final List<int> finishOrder;
+  final int bonusTurns;
 
   const GameState({
     this.players = const [],
@@ -110,6 +134,7 @@ class GameState extends Equatable {
     this.validTokens = const [],
     this.captureEffect,
     this.finishOrder = const [],
+    this.bonusTurns = 0,
   });
 
   factory GameState.fromJson(Map<String, dynamic> json) {
@@ -136,6 +161,7 @@ class GameState extends Equatable {
               ?.map((e) => e as int)
               .toList() ??
           const [],
+      bonusTurns: json['bonusTurns'] as int? ?? 0,
     );
   }
 
@@ -150,6 +176,7 @@ class GameState extends Equatable {
         'validTokens': validTokens.map((token) => token.toJson()).toList(),
         'captureEffect': captureEffect?.toJson(),
         'finishOrder': finishOrder,
+        'bonusTurns': bonusTurns,
       };
 
   GameState copyWith({
@@ -163,6 +190,7 @@ class GameState extends Equatable {
     List<Token>? validTokens,
     Object? captureEffect = _captureEffectNotSet,
     List<int>? finishOrder,
+    int? bonusTurns,
   }) {
     return GameState(
       players: players ?? this.players,
@@ -179,6 +207,7 @@ class GameState extends Equatable {
           ? this.captureEffect
           : captureEffect as CaptureEffect?,
       finishOrder: finishOrder ?? this.finishOrder,
+      bonusTurns: bonusTurns ?? this.bonusTurns,
     );
   }
 
@@ -194,6 +223,7 @@ class GameState extends Equatable {
         validTokens,
         captureEffect,
         finishOrder,
+        bonusTurns,
       ];
 }
 
@@ -212,7 +242,7 @@ class GameBloc extends Bloc<GameEvent, GameState> {
   }
 
   void _onStartGame(StartGame event, Emitter<GameState> emit) {
-    final players = gameRepository.initializePlayers(event.playerCount);
+    final players = gameRepository.initializePlayers(event.playerCount, customColors: event.playerColors);
     emit(state.copyWith(
       players: players,
       currentPlayerIndex: 0,
@@ -224,6 +254,7 @@ class GameBloc extends Bloc<GameEvent, GameState> {
       validTokens: const [],
       captureEffect: null,
       finishOrder: const [],
+      bonusTurns: 0,
     ));
   }
 
@@ -234,6 +265,7 @@ class GameBloc extends Bloc<GameEvent, GameState> {
     }
 
     final diceValue = gameRepository.rollDice();
+    log('Dice rolled: $diceValue');
     final currentPlayer = state.players[state.currentPlayerIndex];
     final validTokens = gameRepository.getValidTokens(
       currentPlayer,
@@ -241,16 +273,32 @@ class GameBloc extends Bloc<GameEvent, GameState> {
       state.players,
     );
 
+    // If rolling a 6, grant a bonus turn (increment bonusTurns)
+    final newBonusTurns = diceValue == 6 ? state.bonusTurns + 1 : state.bonusTurns;
+
     emit(state.copyWith(
       diceValue: diceValue,
       canRollDice: false,
       validTokens: validTokens,
       captureEffect: null,
+      bonusTurns: newBonusTurns,
     ));
     _completeRoll(event, diceValue);
 
     if (validTokens.isEmpty) {
-      _moveToNextPlayer(emit);
+      // If no moves are valid, either use a bonus turn or move to the next player
+      if (newBonusTurns > 0) {
+        emit(state.copyWith(
+          bonusTurns: newBonusTurns - 1,
+          diceValue: null,
+          canRollDice: true,
+          isMoving: false,
+          validTokens: const [],
+          captureEffect: null,
+        ));
+      } else {
+        _moveToNextPlayer(emit);
+      }
     } else if (validTokens.length == 1) {
       add(SelectToken(validTokens.first));
     }
@@ -281,6 +329,9 @@ class GameBloc extends Bloc<GameEvent, GameState> {
       return;
     }
 
+    log('Selected token: ${selectedToken.id}');
+    log('Moving token ${selectedToken.id} only');
+
     final updatedPlayer = gameRepository.moveToken(
       currentPlayer,
       selectedToken,
@@ -301,7 +352,7 @@ class GameBloc extends Bloc<GameEvent, GameState> {
       playerIndex: currentPlayerIndex,
       currentPlayer: currentPlayer,
       targetPlayer: updatedPlayer,
-      tokenId: selectedToken.id,
+      stackedTokenIds: [selectedToken.id],
       emit: emit,
     );
 
@@ -324,12 +375,14 @@ class GameBloc extends Bloc<GameEvent, GameState> {
     required int playerIndex,
     required Player currentPlayer,
     required Player targetPlayer,
-    required int tokenId,
+    required List<int> stackedTokenIds,
     required Emitter<GameState> emit,
   }) async {
     var animatedPlayers = List<Player>.from(state.players);
     var animatedPlayer = currentPlayer;
 
+    // Use selectedToken.id as the leader to determine paths
+    final tokenId = stackedTokenIds.first;
     final startToken = _findTokenById(currentPlayer, tokenId);
     final targetToken = _findTokenById(targetPlayer, tokenId);
 
@@ -354,17 +407,18 @@ class GameBloc extends Bloc<GameEvent, GameState> {
       await Future.delayed(_tokenStepDuration);
       if (emit.isDone) return animatedPlayers;
 
-      final tokenIndex =
-          animatedPlayer.tokens.indexWhere((token) => token.id == tokenId);
-      if (tokenIndex == -1) return animatedPlayers;
-
       final updatedTokens = List<Token>.from(animatedPlayer.tokens);
-      updatedTokens[tokenIndex] = updatedTokens[tokenIndex].copyWith(
-        isHome: false,
-        pathPosition: pathIndex,
-        position: animatedPlayer.path[pathIndex],
-        isFinished: pathIndex == animatedPlayer.path.length - 1,
-      );
+      for (final id in stackedTokenIds) {
+        final tokenIndex = updatedTokens.indexWhere((token) => token.id == id);
+        if (tokenIndex != -1) {
+          updatedTokens[tokenIndex] = updatedTokens[tokenIndex].copyWith(
+            isHome: false,
+            pathPosition: pathIndex,
+            position: animatedPlayer.path[pathIndex],
+            isFinished: pathIndex == animatedPlayer.path.length - 1,
+          );
+        }
+      }
 
       animatedPlayer = animatedPlayer.copyWith(tokens: updatedTokens);
       animatedPlayers = List<Player>.from(animatedPlayers);
@@ -393,14 +447,16 @@ class GameBloc extends Bloc<GameEvent, GameState> {
     );
     final didCapture = captureResult.didCapture;
 
+    var newBonusTurns = state.bonusTurns;
     if (didCapture) {
-      final firstCapturedToken = captureResult.capturedTokens.first;
-      for (final capturedToken in captureResult.capturedTokens) {
-        log(
-          'Player ${currentPlayerIndex + 1} captured Player '
-          '${capturedToken.playerId + 1} token ${capturedToken.tokenId + 1}',
-        );
-      }
+      newBonusTurns += 1; // Increment bonus turns on capture!
+
+      final captureEffectsList = captureResult.capturedTokens
+          .map((ct) => CapturedTokenInfo(
+                tokenId: ct.tokenId,
+                homePosition: ct.homePosition,
+              ))
+          .toList();
 
       emit(state.copyWith(
         players: updatedPlayers,
@@ -409,19 +465,14 @@ class GameBloc extends Bloc<GameEvent, GameState> {
         validTokens: const [],
         captureEffect: CaptureEffect(
           id: ++_captureEffectId,
-          playerId: firstCapturedToken.playerId,
-          tokenId: firstCapturedToken.tokenId,
-          position: firstCapturedToken.capturePosition,
-          homePosition: firstCapturedToken.homePosition,
+          playerId: captureResult.capturedTokens.first.playerId,
+          tokens: captureEffectsList,
+          position: captureResult.capturedTokens.first.capturePosition,
         ),
       ));
 
       await Future.delayed(_captureAnimationDuration);
       if (emit.isDone) return;
-
-      for (final _ in captureResult.capturedTokens) {
-        log('Token returned home');
-      }
 
       emit(state.copyWith(
         players: captureResult.players,
@@ -480,6 +531,7 @@ class GameBloc extends Bloc<GameEvent, GameState> {
           validTokens: const [],
           captureEffect: null,
           finishOrder: newFinishOrder,
+          bonusTurns: 0,
         ));
         return;
       }
@@ -489,12 +541,24 @@ class GameBloc extends Bloc<GameEvent, GameState> {
         players: updatedPlayers,
         finishOrder: newFinishOrder,
       ));
-      _moveToNextPlayer(emit, updatedPlayers);
+
+      if (newBonusTurns > 0) {
+        emit(state.copyWith(
+          bonusTurns: newBonusTurns - 1,
+          diceValue: null,
+          canRollDice: true,
+          isMoving: false,
+          validTokens: const [],
+          captureEffect: null,
+        ));
+      } else {
+        _moveToNextPlayer(emit, updatedPlayers);
+      }
       return;
     }
 
-    if (diceValue == 6 || didCapture) {
-      log('Bonus turn granted');
+    if (newBonusTurns > 0) {
+      log('Bonus turn granted, remaining: $newBonusTurns');
       emit(state.copyWith(
         players: updatedPlayers,
         diceValue: null,
@@ -502,6 +566,7 @@ class GameBloc extends Bloc<GameEvent, GameState> {
         isMoving: false,
         validTokens: const [],
         captureEffect: null,
+        bonusTurns: newBonusTurns - 1,
       ));
     } else {
       _moveToNextPlayer(emit, updatedPlayers);
@@ -536,6 +601,7 @@ class GameBloc extends Bloc<GameEvent, GameState> {
       isMoving: false,
       validTokens: [],
       captureEffect: null,
+      bonusTurns: 0, // Reset bonus turns for the new player
     ));
   }
 

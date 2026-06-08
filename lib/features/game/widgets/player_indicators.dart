@@ -32,9 +32,10 @@ class PlayerIndicators extends StatelessWidget {
   }
 
   Widget _buildCard(int index) {
-    final isPresent = index < players.length;
-    final isActive = index == currentPlayerIndex;
-    final color = isPresent ? players[index].color : LudoColors.textMedium;
+    final playerIndex = players.indexWhere((p) => p.id == index);
+    final isPresent = playerIndex != -1;
+    final isActive = isPresent && playerIndex == currentPlayerIndex;
+    final color = isPresent ? players[playerIndex].color : LudoColors.textMedium;
 
     if (!isPresent) {
       return Opacity(
@@ -49,12 +50,12 @@ class PlayerIndicators extends StatelessWidget {
     }
 
     final homeCount =
-        players[index].tokens.where((t) => t.isHome).length;
+        players[playerIndex].tokens.where((t) => t.isHome).length;
     final subtitle = '$homeCount/4 Home';
 
     return _cardContent(
       color: color,
-      name: isActive ? 'You' : 'Player ${index + 1}',
+      name: players[playerIndex].name,
       subtitle: subtitle,
       isActive: isActive,
     );
