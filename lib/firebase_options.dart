@@ -55,6 +55,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '1007068136770',
     projectId: 'ludo-elite-gautam',
     storageBucket: 'ludo-elite-gautam.firebasestorage.app',
+    androidClientId: '1007068136770-822tca1t7gr81me2q5rqsqt4rj51hu3q.apps.googleusercontent.com',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
@@ -64,5 +65,6 @@ class DefaultFirebaseOptions {
     projectId: 'ludo-elite-gautam',
     storageBucket: 'ludo-elite-gautam.firebasestorage.app',
     iosBundleId: 'com.clikmagnet.ludoGame',
+    iosClientId: '1007068136770-r2n73p5ugj7or7mcaeghas0qr1bkqbhu.apps.googleusercontent.com',
   );
 }

@@ -16,62 +16,61 @@ class FirebaseService {
   // Get current user display name
   String? get currentDisplayName => _auth.currentUser?.displayName;
 
+  // Get current User
+  User? get currentUser => _auth.currentUser;
+
   // Sign In
   Future<UserCredential> signIn(String email, String password) async {
-    debugPrint('FirebaseService: Attempting Email Login for $email');
+    debugPrint('[AUTH] Attempting Email Login for $email');
     final cred = await _auth.signInWithEmailAndPassword(email: email, password: password);
-    debugPrint('FirebaseService: Email Login successful for ${cred.user?.email}');
+    debugPrint('[AUTH] Email Login successful for ${cred.user?.email}');
     return cred;
   }
 
   // Sign Up
   Future<UserCredential> signUp(String email, String password, String name) async {
-    debugPrint('[Email Signup] Attempting signup for email: $email');
+    debugPrint('[AUTH] Attempting signup for email: $email');
     try {
       final cred = await _auth.createUserWithEmailAndPassword(email: email, password: password);
-      debugPrint('[Email Signup] createUserWithEmailAndPassword succeeded. UID: ${cred.user?.uid}');
+      debugPrint('[AUTH] createUserWithEmailAndPassword succeeded. UID: ${cred.user?.uid}');
       
       if (cred.user != null) {
         try {
           await cred.user!.updateDisplayName(name);
-          debugPrint('[Email Signup] Display name updated to: $name');
+          debugPrint('[AUTH] Display name updated to: $name');
         } catch (e) {
-          debugPrint('[Email Signup] Warning: Failed to update display name: $e');
+          debugPrint('[AUTH] Warning: Failed to update display name: $e');
         }
         
-        debugPrint('[Firestore User Creation] Creating Firestore user record for UID: ${cred.user!.uid}');
+        debugPrint('[FIRESTORE] Creating Firestore user record for UID: ${cred.user!.uid}');
         try {
           // Timeout the firestore write after 10 seconds to avoid infinite loading if offline or syncing issues
           await _db.collection('users').doc(cred.user!.uid).set({
             'uid': cred.user!.uid,
-            'displayName': name,
-            'name': name, // For backwards compatibility
+            'name': name,
             'email': email,
-            'photoUrl': '',
             'coins': 1000,
-            'gamesPlayed': 0,
-            'totalGames': 0, // Keep totalGames for backward compatibility
             'wins': 0,
-            'losses': 0,
+            'gamesPlayed': 0,
             'winStreak': 0,
             'createdAt': FieldValue.serverTimestamp(),
           }).timeout(const Duration(seconds: 10), onTimeout: () {
-            debugPrint('[Firestore User Creation] Firestore write timed out. Continuing signup flow.');
+            debugPrint('[FIRESTORE] Firestore write timed out. Continuing signup flow.');
           });
-          debugPrint('[Firestore User Creation] Firestore user record created successfully.');
+          debugPrint('[FIRESTORE] Firestore user record created successfully.');
         } catch (e) {
-          debugPrint('[Firestore User Creation] Failed to create Firestore user record: $e');
+          debugPrint('[FIRESTORE] Failed to create Firestore user record: $e');
           rethrow;
         }
       }
       
-      debugPrint('[Email Signup] Signup flow completed successfully for $email');
+      debugPrint('[AUTH] Signup flow completed successfully for $email');
       return cred;
     } on FirebaseAuthException catch (e) {
-      debugPrint('[Email Signup] FirebaseAuthException: [${e.code}] ${e.message}');
+      debugPrint('[AUTH] FirebaseAuthException: [${e.code}] ${e.message}');
       rethrow;
     } catch (e) {
-      debugPrint('[Email Signup] Unexpected signup error: $e');
+      debugPrint('[AUTH] Unexpected signup error: $e');
       rethrow;
     }
   }
@@ -261,32 +260,25 @@ class FirebaseService {
       if (cred.user != null) {
         final userDoc = await _db.collection('users').doc(cred.user!.uid).get();
         if (!userDoc.exists) {
-          debugPrint('[Firestore User Creation] Creating new user record for Google user UID: ${cred.user!.uid}');
+          debugPrint('[FIRESTORE] Creating new user record for Google user UID: ${cred.user!.uid}');
           await _db.collection('users').doc(cred.user!.uid).set({
             'uid': cred.user!.uid,
-            'displayName': cred.user!.displayName ?? 'Player',
-            'name': cred.user!.displayName ?? 'Player', // For backwards compatibility
+            'name': cred.user!.displayName ?? 'Player',
             'email': cred.user!.email ?? '',
-            'photoURL': cred.user!.photoURL ?? '',
-            'photoUrl': cred.user!.photoURL ?? '',
             'coins': 1000,
             'wins': 0,
             'gamesPlayed': 0,
-            'totalGames': 0,
-            'losses': 0,
             'winStreak': 0,
             'createdAt': FieldValue.serverTimestamp(),
           });
-          debugPrint('[Firestore User Creation] Firestore user record created successfully.');
+          debugPrint('[FIRESTORE] Firestore user record created successfully.');
         } else {
-          debugPrint('[Firestore User Creation] User record already exists. Merging/updating profile info.');
+          debugPrint('[FIRESTORE] User record already exists. Merging/updating profile info.');
           await _db.collection('users').doc(cred.user!.uid).update({
             if (cred.user!.displayName != null) 'name': cred.user!.displayName,
-            if (cred.user!.displayName != null) 'displayName': cred.user!.displayName,
             if (cred.user!.photoURL != null) 'photoUrl': cred.user!.photoURL,
-            if (cred.user!.photoURL != null) 'photoURL': cred.user!.photoURL,
           });
-          debugPrint('[Firestore User Creation] User record updated successfully.');
+          debugPrint('[FIRESTORE] User record updated successfully.');
         }
       }
       return cred;

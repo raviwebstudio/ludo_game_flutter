@@ -12,7 +12,12 @@
           "package_name": "com.clikmagnet.ludo_game"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "1007068136770-822tca1t7gr81me2q5rqsqt4rj51hu3q.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDgUKAQFtxl-vk5cC-fEqC3HpbT5mjo1tk"
@@ -20,7 +25,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1007068136770-822tca1t7gr81me2q5rqsqt4rj51hu3q.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1007068136770-r2n73p5ugj7or7mcaeghas0qr1bkqbhu.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.clikmagnet.ludoGame"
+              }
+            }
+          ]
         }
       }
     }

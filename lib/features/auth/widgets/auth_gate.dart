@@ -198,6 +198,7 @@ class _AuthGateState extends State<AuthGate> {
     final firebaseService = getIt<FirebaseService>();
 
     return StreamBuilder<User?>(
+      initialData: firebaseService.currentUser,
       stream: firebaseService.authStateChanges,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {

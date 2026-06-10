@@ -3,7 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:ludo_game/injection.dart';
 import 'package:ludo_game/core/services/firebase_service.dart';
 import 'package:ludo_game/core/services/auth_health_check.dart';
-import 'package:ludo_game/core/services/auth_error_handler.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ludo_game/core/constants/colors.dart';
 import 'package:ludo_game/core/constants/dimensions.dart';
 import 'package:ludo_game/core/constants/text_styles.dart';
@@ -62,11 +62,15 @@ class _SignupScreenState extends State<SignupScreen> {
         // Pop the signup screen to reveal AuthGate which transitions to HomeScreen
         Navigator.of(context).pop();
       }
-    } catch (e) {
-      debugPrint('[Email Signup Screen] Submission failed: $e');
+    } on FirebaseAuthException catch (e) {
+      debugPrint('[AUTH] FirebaseAuthException in Signup: [${e.code}] ${e.message}');
       if (mounted) {
-        final friendlyMsg = AuthErrorHandler.getFriendlyErrorMessage(e);
-        _showErrorSnackBar(friendlyMsg);
+        _showErrorSnackBar(e.message ?? 'Authentication failed');
+      }
+    } catch (e) {
+      debugPrint('[AUTH] Unexpected signup error: $e');
+      if (mounted) {
+        _showErrorSnackBar('An unexpected error occurred. Please try again.');
       }
     } finally {
       if (mounted) {
