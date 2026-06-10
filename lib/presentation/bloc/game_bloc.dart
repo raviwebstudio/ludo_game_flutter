@@ -8,6 +8,8 @@ import 'package:ludo_game/domain/game_repository.dart';
 import 'package:ludo_game/domain/models/board_position.dart';
 import 'package:ludo_game/domain/models/player.dart';
 import 'package:ludo_game/core/services/player_prefs.dart';
+import 'package:ludo_game/core/services/firebase_service.dart';
+import 'package:ludo_game/injection.dart';
 
 const Object _diceValueNotSet = Object();
 const Object _captureEffectNotSet = Object();
@@ -498,10 +500,21 @@ class GameBloc extends Bloc<GameEvent, GameState> {
 
       // Persist stats for the first winner
       if (finishRank == 1) {
+        final winnerId = updatedPlayers[currentPlayerIndex].id;
+        final isLocalUserWin = winnerId == 0;
         try {
           PlayerPrefs.incrementTotalGames();
-          PlayerPrefs.incrementWins();
-          PlayerPrefs.setWinStreak(PlayerPrefs.winStreak + 1);
+          if (isLocalUserWin) {
+            PlayerPrefs.incrementWins();
+            PlayerPrefs.setWinStreak(PlayerPrefs.winStreak + 1);
+          } else {
+            PlayerPrefs.setWinStreak(0);
+          }
+
+          final firebaseService = getIt<FirebaseService>();
+          if (firebaseService.currentUid != null) {
+            firebaseService.updateUserStats(isWin: isLocalUserWin);
+          }
         } catch (_) {}
       }
 

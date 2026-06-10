@@ -1,0 +1,28 @@
+{
+  "auth": {
+    "providers": {
+      "emailPassword": true,
+      "googleSignIn": true
+    }
+  },
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "ludo-elite-gautam",
+          "appId": "1:1007068136770:android:8c2a6df8b72ad71c60b4db",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "ludo-elite-gautam",
+          "configurations": {
+            "android": "1:1007068136770:android:8c2a6df8b72ad71c60b4db",
+            "ios": "1:1007068136770:ios:9616d0bfbfb3dffd60b4db"
+          }
+        }
+      }
+    }
+  }
+}

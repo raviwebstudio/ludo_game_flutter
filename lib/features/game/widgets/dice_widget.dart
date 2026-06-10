@@ -82,8 +82,11 @@ class _DiceWidgetState extends State<DiceWidget> with TickerProviderStateMixin {
     if (_isRolling) return;
 
     if (widget.value == null) {
-      // Do NOT clear _displayValue and _lastSettled to null.
-      // This keeps the last rolled value visible on the board and avoids the white flash.
+      // Reset the display value to 1 when value is null (e.g. turn changed or game restarted)
+      setState(() {
+        _displayValue = 1;
+        _lastSettled = null;
+      });
       return;
     }
 

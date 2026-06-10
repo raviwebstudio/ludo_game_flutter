@@ -1,7 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import '../../../core/constants/colors.dart';
-import '../../../core/services/player_prefs.dart';
 import '../../../domain/models/player.dart';
 import '../../../domain/models/board_position.dart';
 import '../../../domain/services/safe_zones.dart';
@@ -29,10 +28,10 @@ class ModernBoardPainter extends CustomPainter {
 
   // ── Player colours ──────────────────────────────────────────────────────
   static const List<Color> _playerColors = [
-    LudoColors.redToken,
-    LudoColors.greenToken,
-    LudoColors.yellowToken,
-    LudoColors.blueToken,
+    Color(0xFFF44336), // Red
+    Color(0xFF4CAF50), // Green
+    Color(0xFFFFC107), // Yellow
+    Color(0xFF2196F3), // Blue
   ];
 
   static Color _playerColor(int index) =>
@@ -44,19 +43,12 @@ class ModernBoardPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final cellSize = size.width / 15;
 
-    // Load active board theme
-    final theme = PlayerPrefs.boardTheme;
-    final isClassic = theme == 'Classic Board';
-    final isGold = theme == 'Royal Gold';
-
-    // Theme values (adapted for light backgrounds)
-    final boardBg = isClassic
-        ? const Color(0xFFF2F4F8)
-        : (isGold ? const Color(0xFFFFFDF0) : const Color(0xFFEDE8DC)); // Light warm beige for Neon Dark
-    final cellBorderColor = const Color(0xFFAAA7AD);
+    // Classic vibrant Ludo colors similar to Ludo King style
+    final boardBg = Colors.white;
+    final cellBorderColor = const Color(0xFF707070); // Medium gray
     final centerPathBg = Colors.white;
-    final homeStretchAlpha = 0.18;
-    final homeBgAlpha = isClassic ? 0.35 : (isGold ? 0.22 : 0.18);
+    final homeStretchAlpha = 0.20; // 20% opacity
+    final homeBgAlpha = 0.20; // 20% opacity
 
     _drawBackground(canvas, size, cellSize, boardBg);
     _drawCenterPaths(canvas, size, cellSize, centerPathBg);
@@ -118,7 +110,7 @@ class ModernBoardPainter extends CustomPainter {
     canvas.drawRRect(
       rr,
       Paint()
-        ..color = const Color(0xFFAAA7AD)
+        ..color = const Color(0xFF707070)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.2,
     );
@@ -134,7 +126,16 @@ class ModernBoardPainter extends CustomPainter {
     final innerRR = RRect.fromRectAndRadius(innerRect, const Radius.circular(10));
     canvas.drawRRect(
       innerRR,
-      Paint()..color = Colors.black.withValues(alpha: 0.04), // Dark tint instead of white
+      Paint()..color = Colors.white, // Pure white inner box, matching Ludo King
+    );
+
+    // Inner box border
+    canvas.drawRRect(
+      innerRR,
+      Paint()
+        ..color = const Color(0xFF707070)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.2,
     );
 
     // 4 token slot circles
@@ -143,27 +144,25 @@ class ModernBoardPainter extends CustomPainter {
       for (var col = 0; col < 2; col++) {
         final cx = offset.dx + innerMargin + slotSize * (col + 0.5);
         final cy = offset.dy + innerMargin + slotSize * (row + 0.5);
-        // Light rounded slot
-        final slotRR = RRect.fromRectAndRadius(
-          Rect.fromCenter(
-            center: Offset(cx, cy),
-            width: slotSize * 0.8,
-            height: slotSize * 0.35,
-          ),
-          Radius.circular(slotSize * 0.18),
-        );
-        canvas.drawRRect(
-          slotRR,
-          Paint()..color = const Color(0xFFF0F0F5), // Light background slot
+        
+        final double slotRadius = slotSize * 0.32;
+        final Offset slotCenter = Offset(cx, cy);
+
+        // Slot circle background (vibrant player color at 20% opacity)
+        canvas.drawCircle(
+          slotCenter,
+          slotRadius,
+          Paint()..color = color.withValues(alpha: 0.20),
         );
 
-        // Slot border
-        canvas.drawRRect(
-          slotRR,
+        // Slot circle border
+        canvas.drawCircle(
+          slotCenter,
+          slotRadius,
           Paint()
-            ..color = color.withValues(alpha: 0.15)
+            ..color = const Color(0xFF707070)
             ..style = PaintingStyle.stroke
-            ..strokeWidth = 0.8,
+            ..strokeWidth = 1.0,
         );
       }
     }
@@ -333,18 +332,17 @@ class ModernBoardPainter extends CustomPainter {
       );
       final color = startColors[spot] ?? LudoColors.textMedium;
 
-      // Glow circle
-      canvas.drawCircle(
-        center,
-        cellSize * 0.42,
-        Paint()
-          ..color = color.withValues(alpha: 0.2)
-          ..style = PaintingStyle.fill,
-      );
+      // Draw start cell background if it belongs to a player (20% opacity)
+      if (color != LudoColors.textMedium) {
+        canvas.drawRect(
+          Rect.fromLTWH(spot.x * cellSize, spot.y * cellSize, cellSize, cellSize),
+          Paint()..color = color.withValues(alpha: 0.20),
+        );
+      }
 
-      // Visible outline for the safe spot cell itself
+      // Visible outline for the safe spot cell itself - medium gray
       final outlinePaint = Paint()
-        ..color = const Color(0xFFAAA7AD)
+        ..color = const Color(0xFF707070)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.2;
       canvas.drawRect(
@@ -352,18 +350,18 @@ class ModernBoardPainter extends CustomPainter {
         outlinePaint,
       );
 
-      // Darker star icon: lerp color with black to make it darker and more visible
+      // Star icon color: player color for start cells, medium gray for other safe spots
       final starColor = color == LudoColors.textMedium
-          ? const Color(0xFF333333)
-          : Color.lerp(color, Colors.black, 0.6)!;
+          ? const Color(0xFF707070)
+          : color;
 
-      // Draw star fill with some opacity
+      // Draw star fill with 20% opacity
       _drawStar(canvas, center, cellSize * 0.28, Paint()
-        ..color = starColor.withValues(alpha: 0.35)
+        ..color = starColor.withValues(alpha: 0.20)
         ..style = PaintingStyle.fill,
       );
 
-      // Draw star outline (darker)
+      // Draw star outline
       _drawStar(canvas, center, cellSize * 0.28, Paint()
         ..color = starColor
         ..style = PaintingStyle.stroke
@@ -432,7 +430,7 @@ class ModernBoardPainter extends CustomPainter {
           _draw3DToken(
             canvas,
             center,
-            cellSize * 0.38,
+            cellSize * 0.30,
             player.color,
             validTokens.contains(token),
             currentPlayerId == player.id,
@@ -453,7 +451,7 @@ class ModernBoardPainter extends CustomPainter {
           );
 
           final isOnPath = !tokensAtPos.first.isHome && !tokensAtPos.first.isFinished;
-          final radius = isOnPath ? cellSize * 0.26 : cellSize * 0.38; // Smaller radius on path
+          final radius = isOnPath ? cellSize * 0.20 : cellSize * 0.30; // Smaller radius on path
 
           _draw3DToken(
             canvas,
@@ -478,7 +476,7 @@ class ModernBoardPainter extends CustomPainter {
             center = center + Offset(-off, -off);
 
             final isOnPath = !token.isHome && !token.isFinished;
-            final radius = isOnPath ? cellSize * 0.26 : cellSize * 0.38;
+            final radius = isOnPath ? cellSize * 0.20 : cellSize * 0.30;
 
             _draw3DToken(
               canvas,

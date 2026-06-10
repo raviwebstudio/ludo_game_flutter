@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1007068136770",
+    "project_id": "ludo-elite-gautam",
+    "storage_bucket": "ludo-elite-gautam.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1007068136770:android:8c2a6df8b72ad71c60b4db",
+        "android_client_info": {
+          "package_name": "com.clikmagnet.ludo_game"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDgUKAQFtxl-vk5cC-fEqC3HpbT5mjo1tk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -5,6 +5,7 @@ import 'package:equatable/equatable.dart';
 import 'package:ludo_game/domain/game_repository.dart';
 import 'package:ludo_game/domain/models/player.dart';
 import 'package:ludo_game/core/services/firebase_service.dart';
+import 'package:ludo_game/core/services/player_prefs.dart';
 import 'package:ludo_game/presentation/bloc/game_bloc.dart'; // Reusing CaptureEffect, CapturedTokenInfo, etc.
 import 'package:ludo_game/injection.dart';
 
@@ -438,6 +439,24 @@ class OnlineGameBloc extends Bloc<OnlineGameEvent, OnlineGameState> {
         hasFinished: true,
         finishRank: finishRank,
       );
+
+      // Persist stats when a player finishes first
+      if (finishRank == 1) {
+        final isMyWin = currentPlayerIndex == state.myPlayerIndex;
+        try {
+          PlayerPrefs.incrementTotalGames();
+          if (isMyWin) {
+            PlayerPrefs.incrementWins();
+            PlayerPrefs.setWinStreak(PlayerPrefs.winStreak + 1);
+          } else {
+            PlayerPrefs.setWinStreak(0);
+          }
+
+          if (_firebaseService.currentUid != null) {
+            _firebaseService.updateUserStats(isWin: isMyWin);
+          }
+        } catch (_) {}
+      }
 
       final unfinishedPlayers = winPlayers.where((p) => !p.hasFinished).toList();
 

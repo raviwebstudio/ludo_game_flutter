@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ludo_game/data/game_repository_impl.dart';
 import 'package:ludo_game/domain/models/board_position.dart';
+import 'package:ludo_game/core/constants/colors.dart';
 
 void main() {
   group('GameRepositoryImpl', () {
@@ -104,14 +105,15 @@ void main() {
       expect(captureResult.players[1].tokens.first.isHome, isFalse);
     });
 
-    test('same-opponent stacked tokens can be landed on, but mixed-opponent tokens block movement', () {
+    test('same-opponent stacked tokens can be landed on but block passing, while safe zone coexisting tokens do not block', () {
       final repository = GameRepositoryImpl();
-      final players = repository.initializePlayers(3); // Need 3 players to form a mixed blockade
+      final players = repository.initializePlayers(3);
       final redPlayer = players[0];
       final greenPlayer = players[1];
       final yellowPlayer = players[2];
 
       final blockadePosition = redPlayer.path[1];
+      const safePosition = BoardPosition(1, 6);
 
       final movingToken = redPlayer.tokens.first.copyWith(
         isHome: false,
@@ -122,7 +124,7 @@ void main() {
         tokens: [movingToken, ...redPlayer.tokens.skip(1)],
       );
 
-      // 1. Test same opponent stack (not blocked)
+      // 1. Test same opponent stack (blocks passing, but allows landing)
       final greenBlockadeTokens = List.of(greenPlayer.tokens);
       greenBlockadeTokens[0] = greenBlockadeTokens[0].copyWith(
         isHome: false,
@@ -140,43 +142,53 @@ void main() {
 
       var boardPlayers = [redPlayerOnTrack, greenPlayerWithBlockade, yellowPlayer];
 
-      // Moving to it (1 step) or passing it (2 steps) is VALID because they are of the same opponent
+      // Landing on it (1 step) is VALID
       expect(
         repository.isValidMove(redPlayerOnTrack, movingToken, 1, boardPlayers),
         isTrue,
       );
+      // Passing it (2 steps) is INVALID because it's a blockade
       expect(
         repository.isValidMove(redPlayerOnTrack, movingToken, 2, boardPlayers),
-        isTrue,
+        isFalse,
       );
 
-      // 2. Test mixed opponent stack (blocked)
+      // 2. Test coexisting tokens in a safe zone (does not block passing or landing)
+      final movingTokenNearSafe = redPlayer.tokens.first.copyWith(
+        isHome: false,
+        pathPosition: 0,
+        position: safePosition,
+      );
+      final redPlayerNearSafe = redPlayer.copyWith(
+        tokens: [movingTokenNearSafe, ...redPlayer.tokens.skip(1)],
+      );
+
       final greenTokens = List.of(greenPlayer.tokens);
       greenTokens[0] = greenTokens[0].copyWith(
         isHome: false,
         pathPosition: 0,
-        position: blockadePosition,
+        position: safePosition,
       );
       final yellowTokens = List.of(yellowPlayer.tokens);
       yellowTokens[0] = yellowTokens[0].copyWith(
         isHome: false,
         pathPosition: 0,
-        position: blockadePosition,
+        position: safePosition,
       );
 
       final updatedGreenPlayer = greenPlayer.copyWith(tokens: greenTokens);
       final updatedYellowPlayer = yellowPlayer.copyWith(tokens: yellowTokens);
 
-      boardPlayers = [redPlayerOnTrack, updatedGreenPlayer, updatedYellowPlayer];
+      boardPlayers = [redPlayerNearSafe, updatedGreenPlayer, updatedYellowPlayer];
 
-      // Moving to it (1 step) or passing it (2 steps) is INVALID because they belong to two different opponents
+      // Landing on it (1 step) or passing it (2 steps) is VALID in safe zone
       expect(
-        repository.isValidMove(redPlayerOnTrack, movingToken, 1, boardPlayers),
-        isFalse,
+        repository.isValidMove(redPlayerNearSafe, movingTokenNearSafe, 1, boardPlayers),
+        isTrue,
       );
       expect(
-        repository.isValidMove(redPlayerOnTrack, movingToken, 2, boardPlayers),
-        isFalse,
+        repository.isValidMove(redPlayerNearSafe, movingTokenNearSafe, 2, boardPlayers),
+        isTrue,
       );
     });
 
@@ -234,8 +246,8 @@ void main() {
 
     test('playerColors has Yellow at index 2 and Blue at index 3 to align with paths', () {
       final repository = GameRepositoryImpl();
-      expect(repository.playerColors[2], Colors.yellow);
-      expect(repository.playerColors[3], Colors.blue);
+      expect(repository.playerColors[2], LudoColors.yellowToken);
+      expect(repository.playerColors[3], LudoColors.blueToken);
     });
   });
 }

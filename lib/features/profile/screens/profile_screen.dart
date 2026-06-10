@@ -222,18 +222,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     ),
                                     child: Center(
                                       child: _avatarPath == null
-                                          ? Icon(
+                                          ? const Icon(
                                               Icons.person,
                                               color: LudoColors.textLight,
                                               size: 64,
                                             )
                                           : ClipOval(
-                                              child: Image.file(
-                                                File(_avatarPath!),
-                                                fit: BoxFit.cover,
-                                                width: 120,
-                                                height: 120,
-                                              ),
+                                              child: _avatarPath!.startsWith('http')
+                                                  ? Image.network(
+                                                      _avatarPath!,
+                                                      fit: BoxFit.cover,
+                                                      width: 120,
+                                                      height: 120,
+                                                      errorBuilder: (context, error, stackTrace) => const Icon(
+                                                        Icons.person,
+                                                        color: LudoColors.textLight,
+                                                        size: 64,
+                                                      ),
+                                                    )
+                                                  : Image.file(
+                                                      File(_avatarPath!),
+                                                      fit: BoxFit.cover,
+                                                      width: 120,
+                                                      height: 120,
+                                                      errorBuilder: (context, error, stackTrace) => const Icon(
+                                                        Icons.person,
+                                                        color: LudoColors.textLight,
+                                                        size: 64,
+                                                      ),
+                                                    ),
                                             ),
                                     ),
                                   ),

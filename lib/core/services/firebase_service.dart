@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class FirebaseService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -17,32 +18,73 @@ class FirebaseService {
 
   // Sign In
   Future<UserCredential> signIn(String email, String password) async {
-    return await _auth.signInWithEmailAndPassword(email: email, password: password);
+    debugPrint('FirebaseService: Attempting Email Login for $email');
+    final cred = await _auth.signInWithEmailAndPassword(email: email, password: password);
+    debugPrint('FirebaseService: Email Login successful for ${cred.user?.email}');
+    return cred;
   }
 
   // Sign Up
   Future<UserCredential> signUp(String email, String password, String name) async {
-    final cred = await _auth.createUserWithEmailAndPassword(email: email, password: password);
-    if (cred.user != null) {
-      await cred.user!.updateDisplayName(name);
-      // Create user record in Firestore
-      await _db.collection('users').doc(cred.user!.uid).set({
-        'uid': cred.user!.uid,
-        'name': name,
-        'email': email,
-        'coins': 1000,
-        'totalGames': 0,
-        'wins': 0,
-        'winStreak': 0,
-        'createdAt': FieldValue.serverTimestamp(),
-      });
+    debugPrint('[Email Signup] Attempting signup for email: $email');
+    try {
+      final cred = await _auth.createUserWithEmailAndPassword(email: email, password: password);
+      debugPrint('[Email Signup] createUserWithEmailAndPassword succeeded. UID: ${cred.user?.uid}');
+      
+      if (cred.user != null) {
+        try {
+          await cred.user!.updateDisplayName(name);
+          debugPrint('[Email Signup] Display name updated to: $name');
+        } catch (e) {
+          debugPrint('[Email Signup] Warning: Failed to update display name: $e');
+        }
+        
+        debugPrint('[Firestore User Creation] Creating Firestore user record for UID: ${cred.user!.uid}');
+        try {
+          // Timeout the firestore write after 10 seconds to avoid infinite loading if offline or syncing issues
+          await _db.collection('users').doc(cred.user!.uid).set({
+            'uid': cred.user!.uid,
+            'displayName': name,
+            'name': name, // For backwards compatibility
+            'email': email,
+            'photoUrl': '',
+            'coins': 1000,
+            'gamesPlayed': 0,
+            'totalGames': 0, // Keep totalGames for backward compatibility
+            'wins': 0,
+            'losses': 0,
+            'winStreak': 0,
+            'createdAt': FieldValue.serverTimestamp(),
+          }).timeout(const Duration(seconds: 10), onTimeout: () {
+            debugPrint('[Firestore User Creation] Firestore write timed out. Continuing signup flow.');
+          });
+          debugPrint('[Firestore User Creation] Firestore user record created successfully.');
+        } catch (e) {
+          debugPrint('[Firestore User Creation] Failed to create Firestore user record: $e');
+          rethrow;
+        }
+      }
+      
+      debugPrint('[Email Signup] Signup flow completed successfully for $email');
+      return cred;
+    } on FirebaseAuthException catch (e) {
+      debugPrint('[Email Signup] FirebaseAuthException: [${e.code}] ${e.message}');
+      rethrow;
+    } catch (e) {
+      debugPrint('[Email Signup] Unexpected signup error: $e');
+      rethrow;
     }
-    return cred;
   }
 
   // Sign Out
   Future<void> signOut() async {
+    debugPrint('[Auth] Signing out');
     await _auth.signOut();
+    try {
+      await GoogleSignIn.instance.signOut();
+    } catch (e) {
+      debugPrint('[Auth] Google Sign-Out error: $e');
+    }
   }
 
   // Retrieve user statistics from Firestore
@@ -196,4 +238,110 @@ class FirebaseService {
       'lastUpdateTime': FieldValue.serverTimestamp(),
     });
   }
+
+  // Sign In with Google
+  Future<UserCredential?> signInWithGoogle() async {
+    debugPrint('[Google Sign-In] Attempting Google Sign-In');
+    try {
+      await GoogleSignIn.instance.initialize();
+      final googleUser = await GoogleSignIn.instance.authenticate();
+      debugPrint('[Google Sign-In] Google user authenticated. Email: ${googleUser.email}');
+
+      final googleAuth = googleUser.authentication;
+      debugPrint('[Google Sign-In] Authentication tokens retrieved.');
+
+      final AuthCredential credential = GoogleAuthProvider.credential(
+        idToken: googleAuth.idToken,
+      );
+
+      debugPrint('[Google Sign-In] Exchanging credentials with Firebase.');
+      final cred = await _auth.signInWithCredential(credential);
+      debugPrint('[Google Sign-In] Firebase authentication successful. UID: ${cred.user?.uid}');
+
+      if (cred.user != null) {
+        final userDoc = await _db.collection('users').doc(cred.user!.uid).get();
+        if (!userDoc.exists) {
+          debugPrint('[Firestore User Creation] Creating new user record for Google user UID: ${cred.user!.uid}');
+          await _db.collection('users').doc(cred.user!.uid).set({
+            'uid': cred.user!.uid,
+            'displayName': cred.user!.displayName ?? 'Player',
+            'name': cred.user!.displayName ?? 'Player', // For backwards compatibility
+            'email': cred.user!.email ?? '',
+            'photoURL': cred.user!.photoURL ?? '',
+            'photoUrl': cred.user!.photoURL ?? '',
+            'coins': 1000,
+            'wins': 0,
+            'gamesPlayed': 0,
+            'totalGames': 0,
+            'losses': 0,
+            'winStreak': 0,
+            'createdAt': FieldValue.serverTimestamp(),
+          });
+          debugPrint('[Firestore User Creation] Firestore user record created successfully.');
+        } else {
+          debugPrint('[Firestore User Creation] User record already exists. Merging/updating profile info.');
+          await _db.collection('users').doc(cred.user!.uid).update({
+            if (cred.user!.displayName != null) 'name': cred.user!.displayName,
+            if (cred.user!.displayName != null) 'displayName': cred.user!.displayName,
+            if (cred.user!.photoURL != null) 'photoUrl': cred.user!.photoURL,
+            if (cred.user!.photoURL != null) 'photoURL': cred.user!.photoURL,
+          });
+          debugPrint('[Firestore User Creation] User record updated successfully.');
+        }
+      }
+      return cred;
+    } catch (e) {
+      debugPrint('[Google Sign-In] Google Sign-In FAILED: $e');
+      rethrow;
+    }
+  }
+
+  // Token refresh for Google Sign-In
+  Future<GoogleSignInAuthentication?> refreshGoogleToken() async {
+    debugPrint('[Google Sign-In] Refreshing Google Token');
+    try {
+      await GoogleSignIn.instance.initialize();
+      final googleUser = await GoogleSignIn.instance.attemptLightweightAuthentication();
+      if (googleUser != null) {
+        final auth = googleUser.authentication;
+        debugPrint('[Google Sign-In] Google Token refreshed successfully.');
+        return auth;
+      }
+    } catch (e) {
+      debugPrint('[Google Sign-In] Google Token refresh failed: $e');
+    }
+    return null;
+  }
+
+  // Update user statistics in Firestore after a game ends
+  Future<void> updateUserStats({required bool isWin}) async {
+    final uid = currentUid;
+    if (uid == null) return;
+
+    final docRef = _db.collection('users').doc(uid);
+    try {
+      await _db.runTransaction((transaction) async {
+        final snapshot = await transaction.get(docRef);
+        if (!snapshot.exists) return;
+
+        final data = snapshot.data() as Map<String, dynamic>;
+        final int totalGames = (data['totalGames'] as int? ?? 0) + 1;
+        final int gamesPlayed = (data['gamesPlayed'] as int? ?? 0) + 1;
+        final int wins = (data['wins'] as int? ?? 0) + (isWin ? 1 : 0);
+        final int losses = (data['losses'] as int? ?? 0) + (isWin ? 0 : 1);
+        final int winStreak = isWin ? ((data['winStreak'] as int? ?? 0) + 1) : 0;
+        final int coins = (data['coins'] as int? ?? 0) + (isWin ? 500 : 100);
+
+        transaction.update(docRef, {
+          'totalGames': totalGames,
+          'gamesPlayed': gamesPlayed,
+          'wins': wins,
+          'losses': losses,
+          'winStreak': winStreak,
+          'coins': coins,
+        });
+      });
+    } catch (_) {}
+  }
 }
+

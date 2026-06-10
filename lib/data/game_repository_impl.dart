@@ -5,6 +5,7 @@ import 'package:ludo_game/domain/models/board_position.dart';
 import 'package:ludo_game/domain/models/capture_result.dart';
 import 'package:ludo_game/domain/models/player.dart';
 import 'package:ludo_game/core/services/player_prefs.dart';
+import 'package:ludo_game/core/constants/colors.dart';
 import 'package:ludo_game/domain/services/safe_zones.dart';
 
 class GameRepositoryImpl implements GameRepository {
@@ -13,10 +14,10 @@ class GameRepositoryImpl implements GameRepository {
   final Random _random = Random();
 
   final List<Color> playerColors = [
-    Colors.red,
-    Colors.green,
-    Colors.yellow,
-    Colors.blue,
+    LudoColors.redToken,
+    LudoColors.greenToken,
+    LudoColors.yellowToken,
+    LudoColors.blueToken,
   ];
 
   final Map<int, List<BoardPosition>> _playerPaths = {
@@ -105,19 +106,15 @@ class GameRepositoryImpl implements GameRepository {
     }
   }
 
-  bool isBlockedCell(BoardPosition position, List<Player> players) {
+  bool isBlockedCell(BoardPosition position, int movingPlayerId, List<Player> players) {
     if (isSafeZone(position)) return false;
 
-    // Count how many different players have tokens on this position
-    final uniquePlayersOnPosition = <int>{};
     for (final player in players) {
-      for (final token in player.tokens) {
-        if (!token.isHome && !token.isFinished && token.position == position) {
-          uniquePlayersOnPosition.add(player.id);
-        }
-      }
+      if (player.id == movingPlayerId) continue;
+      final count = player.tokens.where((t) => !t.isHome && !t.isFinished && t.position == position).length;
+      if (count >= 2) return true;
     }
-    return uniquePlayersOnPosition.length >= 2;
+    return false;
   }
 
   @override
@@ -140,13 +137,13 @@ class GameRepositoryImpl implements GameRepository {
       return true;
     }
 
-    // Check if any cells along the path (excluding current cell, up to destination cell) are blocked cells
+    // Check if any cells along the path (excluding current cell and destination cell) are blocked cells
     final firstPathPosition = token.isHome ? 0 : token.pathPosition + 1;
     for (var pathPosition = firstPathPosition;
-        pathPosition <= nextPathPosition;
+        pathPosition < nextPathPosition;
         pathPosition++) {
       final boardPosition = player.path[pathPosition];
-      if (isBlockedCell(boardPosition, players)) {
+      if (isBlockedCell(boardPosition, player.id, players)) {
         return false;
       }
     }

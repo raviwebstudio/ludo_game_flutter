@@ -18,10 +18,10 @@ class LudoColors {
   static const Color cyan = Color(0xFF00E5FF);
 
   // ── Token Colors ──
-  static const Color redToken = Color(0xFFE74C3C);
-  static const Color greenToken = Color(0xFF2ECC71);
-  static const Color yellowToken = Color(0xFFF39C12);
-  static const Color blueToken = Color(0xFF3498DB);
+  static const Color redToken = Color(0xFFF44336);
+  static const Color greenToken = Color(0xFF4CAF50);
+  static const Color yellowToken = Color(0xFFFFC107);
+  static const Color blueToken = Color(0xFF2196F3);
 
   // ── Text ──
   static const Color textLight = Color(0xFFECF0F1);      // Light text on dark bg

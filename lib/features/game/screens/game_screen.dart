@@ -9,6 +9,7 @@ import 'package:ludo_game/core/services/sound_manager.dart';
 import 'package:ludo_game/shared/widgets/glass_morphism.dart';
 import 'package:ludo_game/shared/widgets/gradient_button.dart';
 import '../../../presentation/bloc/game_bloc.dart';
+import 'package:ludo_game/domain/models/player.dart';
 import '../widgets/board_container.dart';
 import '../widgets/dice_widget.dart';
 import '../widgets/game_board.dart';
@@ -16,10 +17,102 @@ import '../widgets/player_indicators.dart';
 import '../widgets/turn_indicator.dart';
 
 /// The main premium Game Play screen for Ludo Elite.
-class GameScreen extends StatelessWidget {
+class GameScreen extends StatefulWidget {
   const GameScreen({super.key});
 
+  @override
+  State<GameScreen> createState() => _GameScreenState();
+}
+
+class _GameScreenState extends State<GameScreen> {
   static const double _maxContentWidth = 420;
+  bool _isAutoplay = false;
+  Timer? _autoplayTimer;
+
+  @override
+  void dispose() {
+    _autoplayTimer?.cancel();
+    super.dispose();
+  }
+
+  void _triggerAutoplayAction(GameState state) {
+    if (!_isAutoplay || state.isGameOver || state.isMoving) {
+      _autoplayTimer?.cancel();
+      _autoplayTimer = null;
+      return;
+    }
+
+    if (_autoplayTimer != null) return; // Already scheduled
+
+    if (state.canRollDice) {
+      _autoplayTimer = Timer(const Duration(milliseconds: 800), () {
+        _autoplayTimer = null;
+        if (!mounted || !_isAutoplay) return;
+        final currentState = context.read<GameBloc>().state;
+        if (currentState.canRollDice && !currentState.isMoving && !currentState.isGameOver) {
+          final completer = Completer<int?>();
+          context.read<GameBloc>().add(RollDice(resultCompleter: completer));
+        }
+      });
+    } else if (state.validTokens.isNotEmpty) {
+      _autoplayTimer = Timer(const Duration(milliseconds: 800), () {
+        _autoplayTimer = null;
+        if (!mounted || !_isAutoplay) return;
+        final currentState = context.read<GameBloc>().state;
+        if (currentState.validTokens.isNotEmpty && !currentState.isMoving && !currentState.isGameOver) {
+          final chosenToken = _chooseBestToken(currentState);
+          context.read<GameBloc>().add(SelectToken(chosenToken));
+        }
+      });
+    }
+  }
+
+  Token _chooseBestToken(GameState state) {
+    final currentPlayerIndex = state.currentPlayerIndex;
+    final currentPlayer = state.players[currentPlayerIndex];
+    final gameRepository = context.read<GameBloc>().gameRepository;
+    
+    Token? bestToken;
+    int bestScore = -1000;
+
+    for (final token in state.validTokens) {
+      int score = 0;
+      
+      final nextPathPosition = token.isHome ? 0 : token.pathPosition + (state.diceValue ?? 0);
+      if (nextPathPosition < currentPlayer.path.length) {
+        final targetPosition = currentPlayer.path[nextPathPosition];
+        
+        final canCapture = gameRepository.checkCollision(targetPosition, state.players) &&
+                           !gameRepository.isSafeZone(targetPosition);
+        if (canCapture) {
+          score += 100;
+        }
+
+        final isSafe = gameRepository.isSafeZone(targetPosition);
+        final wasSafe = gameRepository.isSafeZone(token.position);
+        if (isSafe && !wasSafe) {
+          score += 30;
+        }
+
+        if (nextPathPosition == currentPlayer.path.length - 1) {
+          score += 50;
+        }
+      }
+
+      if (token.isHome && state.diceValue == 6) {
+        score += 40;
+      } else if (!token.isHome) {
+        score += token.pathPosition;
+      }
+
+      if (score > bestScore) {
+        bestScore = score;
+        bestToken = token;
+      }
+    }
+
+    return bestToken ?? state.validTokens.first;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,9 +142,18 @@ class GameScreen extends StatelessWidget {
             ),
           ),
           child: BlocListener<GameBloc, GameState>(
-            listenWhen: (previous, current) => !previous.isGameOver && current.isGameOver,
             listener: (context, state) {
-              SoundManager().playSound(SoundType.victory);
+              if (state.isGameOver) {
+                SoundManager().playSound(SoundType.victory);
+                if (_isAutoplay) {
+                  setState(() {
+                    _isAutoplay = false;
+                  });
+                }
+              }
+              if (_isAutoplay) {
+                _triggerAutoplayAction(state);
+              }
             },
             child: BlocBuilder<GameBloc, GameState>(
               builder: (context, state) {
@@ -187,11 +289,32 @@ class GameScreen extends StatelessWidget {
             letterSpacing: 1.5,
           ),
         ),
-        IconButton(
-          onPressed: () {
-            Navigator.pushNamed(context, '/settings');
-          },
-          icon: const Icon(Icons.settings, color: LudoColors.textLight),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              onPressed: () {
+                setState(() {
+                  _isAutoplay = !_isAutoplay;
+                });
+                if (_isAutoplay) {
+                  _triggerAutoplayAction(context.read<GameBloc>().state);
+                }
+              },
+              icon: Icon(
+                _isAutoplay ? Icons.smart_toy : Icons.smart_toy_outlined,
+                color: _isAutoplay ? LudoColors.mintGreen : LudoColors.textLight,
+              ),
+              tooltip: 'Autoplay Mode',
+            ).animate(target: _isAutoplay ? 1.0 : 0.0)
+             .shimmer(duration: 1000.ms, color: LudoColors.mintGreen.withValues(alpha: 0.3)),
+            IconButton(
+              onPressed: () {
+                Navigator.pushNamed(context, '/settings');
+              },
+              icon: const Icon(Icons.settings, color: LudoColors.textLight),
+            ),
+          ],
         ),
       ],
     );
@@ -222,13 +345,19 @@ class GameScreen extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          canRoll ? 'TAP TO ROLL' : 'WAITING FOR TURN',
+          canRoll
+              ? 'TAP TO ROLL'
+              : (state.isMoving
+                  ? 'MOVING TOKEN...'
+                  : 'SELECT TOKEN TO MOVE'),
           style: LudoTextStyles.labelSmall.copyWith(
-            color: canRoll ? LudoColors.mintGreen : LudoColors.textMedium,
+            color: (canRoll || (!state.canRollDice && !state.isMoving))
+                ? LudoColors.mintGreen
+                : LudoColors.textMedium,
             fontWeight: FontWeight.w800,
             letterSpacing: 1.2,
           ),
-        ).animate(target: canRoll ? 1.0 : 0.0)
+        ).animate(target: (canRoll || (!state.canRollDice && !state.isMoving)) ? 1.0 : 0.0)
             .fadeIn(duration: 200.ms)
             .shimmer(duration: 1500.ms, color: Colors.white.withValues(alpha: 0.5)),
       ],

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:ludo_game/injection.dart';
 import 'package:ludo_game/core/services/firebase_service.dart';
+import 'package:ludo_game/core/services/auth_health_check.dart';
+import 'package:ludo_game/core/services/auth_error_handler.dart';
 import 'package:ludo_game/core/constants/colors.dart';
 import 'package:ludo_game/core/constants/dimensions.dart';
 import 'package:ludo_game/core/constants/text_styles.dart';
@@ -36,7 +38,17 @@ class _SignupScreenState extends State<SignupScreen> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
+    // Validate service availability before signup
+    if (!AuthHealthCheck.isFirebaseCoreReady ||
+        !AuthHealthCheck.isFirebaseAuthReady ||
+        !AuthHealthCheck.isFirestoreReady) {
+      debugPrint('[Email Signup Screen] Signup aborted: Firebase services are not initialized.');
+      _showErrorSnackBar('Firebase services are not initialized. Please try again.');
+      return;
+    }
+
     setState(() => _isLoading = true);
+    debugPrint('[Email Signup Screen] Starting submit flow for ${_emailController.text.trim()}');
 
     try {
       final firebaseService = getIt<FirebaseService>();
@@ -45,13 +57,16 @@ class _SignupScreenState extends State<SignupScreen> {
         _passwordController.text,
         _nameController.text.trim(),
       );
+      debugPrint('[Navigation] Email signup complete. Popping signup screen to return to AuthGate.');
       if (mounted) {
-        // Pop back to AuthGate, which will route to HomeScreen
-        Navigator.popUntil(context, ModalRoute.withName('/auth'));
+        // Pop the signup screen to reveal AuthGate which transitions to HomeScreen
+        Navigator.of(context).pop();
       }
     } catch (e) {
+      debugPrint('[Email Signup Screen] Submission failed: $e');
       if (mounted) {
-        _showErrorSnackBar(e.toString());
+        final friendlyMsg = AuthErrorHandler.getFriendlyErrorMessage(e);
+        _showErrorSnackBar(friendlyMsg);
       }
     } finally {
       if (mounted) {

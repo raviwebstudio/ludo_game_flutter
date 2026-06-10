@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:ludo_game/injection.dart';
 import 'package:ludo_game/core/services/player_prefs.dart';
+import 'package:ludo_game/core/services/auth_health_check.dart';
 import 'package:ludo_game/core/theme/app_theme.dart';
 import 'package:ludo_game/features/splash/screens/splash_screen.dart';
 import 'package:ludo_game/features/home/screens/home_screen.dart';
@@ -24,11 +24,10 @@ import 'package:ludo_game/features/game/screens/online_game_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  try {
-    await Firebase.initializeApp();
-  } catch (e) {
-    // Suppress or handle appropriately (e.g. for some test scenarios)
-  }
+  
+  // Run startup diagnostics and health checks
+  await AuthHealthCheck.runDiagnostics();
+  
   await PlayerPrefs.init();
   setupDependencyInjection();
   runApp(const LudoGame());
