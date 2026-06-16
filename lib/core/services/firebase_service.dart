@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:ludo_game/core/services/player_prefs.dart';
 
 class FirebaseService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -123,6 +124,7 @@ class FirebaseService {
           'name': hostName,
           'colorValue': hostColor.toARGB32(),
           'isReady': true,
+          'avatarPath': PlayerPrefs.playerAvatarPath(0),
         }
       ],
       'lastUpdateTime': FieldValue.serverTimestamp(),
@@ -152,6 +154,7 @@ class FirebaseService {
         'name': playerName,
         'colorValue': playerColor.toARGB32(),
         'isReady': false,
+        'avatarPath': PlayerPrefs.playerAvatarPath(0),
       });
 
       transaction.update(docRef, {

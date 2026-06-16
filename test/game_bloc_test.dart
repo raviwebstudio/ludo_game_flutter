@@ -75,6 +75,7 @@ class _CapturingRepository implements GameRepository {
     Player player,
     int diceValue, [
     List<Player> players = const [],
+    bool oppositeSideFriends = false,
   ]) {
     return [player.tokens.first];
   }
@@ -85,6 +86,7 @@ class _CapturingRepository implements GameRepository {
     Token token,
     int diceValue, [
     List<Player> players = const [],
+    bool oppositeSideFriends = false,
   ]) {
     return true;
   }
@@ -106,6 +108,7 @@ class _CapturingRepository implements GameRepository {
     required List<Player> players,
     required int currentPlayerIndex,
     required Token movedToken,
+    bool oppositeSideFriends = false,
   }) {
     final updatedPlayers = List<Player>.from(players);
     final capturedPlayer = updatedPlayers[1];

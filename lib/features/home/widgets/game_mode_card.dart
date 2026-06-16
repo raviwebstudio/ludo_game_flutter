@@ -10,6 +10,7 @@ class GameModeCard extends StatefulWidget {
   final String subtitle;
   final VoidCallback onTap;
   final List<Color>? gradientColors;
+  final String? badge;
 
   const GameModeCard({
     required this.icon,
@@ -17,6 +18,7 @@ class GameModeCard extends StatefulWidget {
     required this.subtitle,
     required this.onTap,
     this.gradientColors,
+    this.badge,
     super.key,
   });
 
@@ -52,6 +54,100 @@ class _GameModeCardState extends State<GameModeCard>
     final colors = widget.gradientColors ??
         const [LudoColors.softBlue, LudoColors.brightBlue];
 
+    Widget cardContent = Container(
+      padding: const EdgeInsets.all(LudoDimensions.spacing16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: colors,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(LudoDimensions.radius20),
+        boxShadow: [
+          BoxShadow(
+            color: colors.first.withValues(alpha: 0.3),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.2),
+              borderRadius:
+                  BorderRadius.circular(LudoDimensions.radius12),
+            ),
+            child: Icon(widget.icon, color: Colors.white, size: 32),
+          ),
+          const SizedBox(width: LudoDimensions.spacing16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  widget.title,
+                  style: LudoTextStyles.headlineXS
+                      .copyWith(color: Colors.white),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  widget.subtitle,
+                  style: LudoTextStyles.bodyMedium.copyWith(
+                    color: Colors.white.withValues(alpha: 0.8),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Icon(
+            Icons.arrow_forward_ios,
+            color: Colors.white.withValues(alpha: 0.6),
+            size: 20,
+          ),
+        ],
+      ),
+    );
+
+    if (widget.badge != null) {
+      cardContent = Stack(
+        clipBehavior: Clip.none,
+        children: [
+          cardContent,
+          Positioned(
+            top: -4,
+            right: 8,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.red,
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.2),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Text(
+                widget.badge!,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
     return ScaleTransition(
       scale: _scale,
       child: GestureDetector(
@@ -61,63 +157,7 @@ class _GameModeCardState extends State<GameModeCard>
           widget.onTap();
         },
         onTapCancel: () => _controller.reverse(),
-        child: Container(
-          padding: const EdgeInsets.all(LudoDimensions.spacing16),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: colors,
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(LudoDimensions.radius20),
-            boxShadow: [
-              BoxShadow(
-                color: colors.first.withValues(alpha: 0.3),
-                blurRadius: 16,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius:
-                      BorderRadius.circular(LudoDimensions.radius12),
-                ),
-                child: Icon(widget.icon, color: Colors.white, size: 32),
-              ),
-              const SizedBox(width: LudoDimensions.spacing16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      widget.title,
-                      style: LudoTextStyles.headlineXS
-                          .copyWith(color: Colors.white),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      widget.subtitle,
-                      style: LudoTextStyles.bodyMedium.copyWith(
-                        color: Colors.white.withValues(alpha: 0.8),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(
-                Icons.arrow_forward_ios,
-                color: Colors.white.withValues(alpha: 0.6),
-                size: 20,
-              ),
-            ],
-          ),
-        ),
+        child: cardContent,
       ),
     );
   }

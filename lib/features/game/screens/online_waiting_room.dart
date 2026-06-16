@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:ludo_game/injection.dart';
@@ -225,6 +226,7 @@ class _OnlineWaitingRoomState extends State<OnlineWaitingRoom> {
     final colorVal = player['colorValue'] as int;
     final isReady = player['isReady'] as bool;
     final isHost = uid == hostId;
+    final avatarPath = player['avatarPath'] as String?;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -239,7 +241,16 @@ class _OnlineWaitingRoomState extends State<OnlineWaitingRoom> {
           CircleAvatar(
             backgroundColor: Color(colorVal),
             radius: 18,
-            child: const Icon(Icons.person, color: Colors.white, size: 20),
+            backgroundImage: (avatarPath != null && avatarPath.isNotEmpty)
+                ? (avatarPath.startsWith('http')
+                    ? NetworkImage(avatarPath)
+                    : avatarPath.startsWith('assets/')
+                        ? AssetImage(avatarPath)
+                        : FileImage(File(avatarPath)) as ImageProvider)
+                : null,
+            child: (avatarPath == null || avatarPath.isEmpty)
+                ? const Icon(Icons.person, color: Colors.white, size: 20)
+                : null,
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -351,6 +362,7 @@ class _OnlineWaitingRoomState extends State<OnlineWaitingRoom> {
           id: id,
           color: Color(colorVal),
           name: pData['name'] as String,
+          avatarPath: pData['avatarPath'] as String?,
           tokens: List.generate(
             4,
             (tokenIndex) => Token(

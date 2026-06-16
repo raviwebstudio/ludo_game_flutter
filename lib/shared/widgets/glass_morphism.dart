@@ -8,6 +8,8 @@ class GlassMorphism extends StatelessWidget {
   final double blur;
   final BorderRadius borderRadius;
   final EdgeInsets? padding;
+  final Color? borderColor;
+  final List<BoxShadow>? boxShadow;
 
   const GlassMorphism({
     required this.child,
@@ -15,6 +17,8 @@ class GlassMorphism extends StatelessWidget {
     this.blur = 10.0,
     this.borderRadius = const BorderRadius.all(Radius.circular(20)),
     this.padding,
+    this.borderColor,
+    this.boxShadow,
     super.key,
   });
 
@@ -27,12 +31,13 @@ class GlassMorphism extends StatelessWidget {
         child: Container(
           padding: padding,
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: opacity.clamp(0.65, 0.85)),
+            color: const Color(0xFF253B5C).withValues(alpha: opacity),
             borderRadius: borderRadius,
             border: Border.all(
-              color: Colors.black.withValues(alpha: 0.06),
-              width: 1,
+              color: borderColor ?? Colors.white.withValues(alpha: 0.12),
+              width: 1.5,
             ),
+            boxShadow: boxShadow,
           ),
           child: child,
         ),

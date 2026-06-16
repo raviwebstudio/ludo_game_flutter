@@ -194,11 +194,18 @@ class OnlineGameBloc extends Bloc<OnlineGameEvent, OnlineGameState> {
   Future<void> _onRollDiceOnline(RollDiceOnline event, Emitter<OnlineGameState> emit) async {
     final currentGameState = state.gameState;
     if (currentGameState == null || !state.isMyTurn || !currentGameState.canRollDice || currentGameState.isMoving) {
+      if (event.resultCompleter != null && !event.resultCompleter!.isCompleted) {
+        event.resultCompleter!.complete(null);
+      }
       return;
     }
 
     final diceValue = gameRepository.rollDice();
     dev.log('Dice rolled: $diceValue');
+
+    if (event.resultCompleter != null && !event.resultCompleter!.isCompleted) {
+      event.resultCompleter!.complete(diceValue);
+    }
 
     final currentPlayer = currentGameState.players[currentGameState.currentPlayerIndex];
     final validTokens = gameRepository.getValidTokens(

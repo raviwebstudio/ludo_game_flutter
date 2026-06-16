@@ -122,6 +122,7 @@ class _GameScreenState extends State<GameScreen> {
         if (didPop) return;
         final shouldPop = await showDialog<bool>(
           context: context,
+          barrierColor: Colors.black.withValues(alpha: 0.7),
           builder: (context) => _buildExitDialog(context),
         );
         if (shouldPop ?? false) {
@@ -272,6 +273,7 @@ class _GameScreenState extends State<GameScreen> {
           onPressed: () async {
             final shouldPop = await showDialog<bool>(
               context: context,
+              barrierColor: Colors.black.withValues(alpha: 0.7),
               builder: (context) => _buildExitDialog(context),
             );
             if (shouldPop == true) {
@@ -368,8 +370,8 @@ class _GameScreenState extends State<GameScreen> {
     return Dialog(
       backgroundColor: Colors.transparent,
       child: GlassMorphism(
-        opacity: 0.15,
-        blur: 16,
+        opacity: 0.25,
+        blur: 24,
         borderRadius: BorderRadius.circular(LudoDimensions.radius24),
         padding: const EdgeInsets.all(LudoDimensions.spacing24),
         child: Column(
@@ -383,25 +385,38 @@ class _GameScreenState extends State<GameScreen> {
             const SizedBox(height: 16),
             Text(
               'Quit Game?',
-              style: LudoTextStyles.headlineSmall.copyWith(color: LudoColors.textLight),
+              style: LudoTextStyles.headlineSmall.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 12),
             Text(
               'Are you sure you want to end this game? Your progress will be lost.',
               textAlign: TextAlign.center,
-              style: LudoTextStyles.bodyMedium.copyWith(color: LudoColors.textMedium),
+              style: LudoTextStyles.bodyMedium.copyWith(color: Colors.white),
             ),
             const SizedBox(height: 24),
             Row(
               children: [
                 Expanded(
-                  child: TextButton(
-                    onPressed: () => Navigator.pop(context, false),
-                    child: Text(
-                      'Cancel',
-                      style: LudoTextStyles.labelSmall.copyWith(
-                        color: LudoColors.textMedium,
-                        fontSize: 14,
+                  child: SizedBox(
+                    height: 48,
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.white.withValues(alpha: 0.7),
+                        side: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(LudoDimensions.radius20),
+                        ),
+                      ),
+                      child: const Text(
+                        'Cancel',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
@@ -410,6 +425,7 @@ class _GameScreenState extends State<GameScreen> {
                 Expanded(
                   child: GradientButton(
                     label: 'Quit',
+                    height: 48,
                     onPressed: () {
                       Navigator.pop(context, true);
                     },

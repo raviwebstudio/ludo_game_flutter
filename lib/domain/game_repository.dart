@@ -10,11 +10,13 @@ abstract class GameRepository {
     Token token,
     int diceValue, [
     List<Player> players = const [],
+    bool oppositeSideFriends = false,
   ]);
   List<Token> getValidTokens(
     Player player,
     int diceValue, [
     List<Player> players = const [],
+    bool oppositeSideFriends = false,
   ]);
   Player moveToken(Player player, Token token, int diceValue);
   bool checkWinner(Player player);
@@ -25,6 +27,7 @@ abstract class GameRepository {
     required List<Player> players,
     required int currentPlayerIndex,
     required Token movedToken,
+    bool oppositeSideFriends = false,
   });
   bool isSafeZone(BoardPosition? position);
   bool isHomePath(Player player, Token token);

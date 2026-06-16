@@ -51,6 +51,7 @@ class PlayerPrefs {
   static const _player1ColorKey = '${_keyPrefix}player1_color';
 
   static int get coins => _prefs?.getInt(_coinsKey) ?? 25450;
+  static int getCoins() => coins;
   static Future<void> setCoins(int value) async {
     await _prefs?.setInt(_coinsKey, value);
     _changeController.add(null);
@@ -114,12 +115,52 @@ class PlayerPrefs {
 
   // Player name / avatar per local player slot
   static String playerName(int index) => _prefs?.getString('${_keyPrefix}player_name_$index') ?? 'Player ${index + 1}';
+  static String getPlayerName(int index) {
+    final name = _prefs?.getString('${_keyPrefix}player_name_$index');
+    if (name == null || name.trim().isEmpty) {
+      return 'Player ${index + 1}';
+    }
+    return name;
+  }
   static Future<void> setPlayerName(int index, String name) async {
     await _prefs?.setString('${_keyPrefix}player_name_$index', name);
     _changeController.add(null);
   }
 
-  static String? playerAvatarPath(int index) => _prefs?.getString('${_keyPrefix}player_avatar_$index');
+  static String playerAvatarPath(int index) {
+    final path = _prefs?.getString('${_keyPrefix}player_avatar_$index');
+    if (path != null && path.isNotEmpty) {
+      return path;
+    }
+    final defaults = [
+      'assets/avatars/lion.png',
+      'assets/avatars/panda.png',
+      'assets/avatars/tiger.png',
+      'assets/avatars/eagle.png',
+      'assets/avatars/king.png',
+      'assets/avatars/owl.png',
+      'assets/avatars/bear.png',
+      'assets/avatars/fox.png',
+      'assets/avatars/wolf.png',
+      'assets/avatars/rabbit.png',
+      'assets/avatars/penguin.png',
+      'assets/avatars/peacock.png',
+    ];
+    if (index == 0) {
+      return defaults[0];
+    }
+    final used = <String>{};
+    for (int i = 0; i < index; i++) {
+      used.add(playerAvatarPath(i));
+    }
+    for (final avatar in defaults) {
+      if (!used.contains(avatar)) {
+        return avatar;
+      }
+    }
+    return defaults[index % defaults.length];
+  }
+
   static Future<void> setPlayerAvatarPath(int index, String path) async {
     await _prefs?.setString('${_keyPrefix}player_avatar_$index', path);
     _changeController.add(null);

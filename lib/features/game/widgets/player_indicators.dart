@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:ludo_game/core/services/player_prefs.dart';
 import '../../../core/constants/colors.dart';
 import '../../../core/constants/dimensions.dart';
 import '../../../core/constants/text_styles.dart';
@@ -103,6 +105,7 @@ class PlayerIndicators extends StatelessWidget {
     final isYou = player.id == 0 || player.name.toLowerCase() == 'you';
     final homeCount = player.tokens.where((t) => t.isHome).length;
     final subtitle = '$homeCount/4 Home';
+    final avatarPath = player.avatarPath ?? PlayerPrefs.playerAvatarPath(player.id);
 
     return TweenAnimationBuilder<double>(
       tween: Tween<double>(begin: 1.0, end: isActive ? 1.05 : 1.0),
@@ -119,6 +122,7 @@ class PlayerIndicators extends StatelessWidget {
         subtitle: subtitle,
         isActive: isActive,
         isYou: isYou,
+        avatarPath: avatarPath,
       ),
     );
   }
@@ -129,6 +133,7 @@ class PlayerIndicators extends StatelessWidget {
     required String subtitle,
     required bool isActive,
     required bool isYou,
+    String? avatarPath,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -170,12 +175,50 @@ class PlayerIndicators extends StatelessWidget {
                 width: 1.5,
               ),
             ),
-            child: Center(
-              child: Icon(
-                Icons.person,
-                color: theme.border,
-                size: 18,
-              ),
+            child: ClipOval(
+              child: (avatarPath != null && avatarPath.isNotEmpty)
+                  ? (avatarPath.startsWith('http')
+                      ? Image.network(
+                          avatarPath,
+                          fit: BoxFit.cover,
+                          width: 36,
+                          height: 36,
+                          errorBuilder: (context, error, stackTrace) => Icon(
+                            Icons.person,
+                            color: theme.border,
+                            size: 18,
+                          ),
+                        )
+                      : avatarPath.startsWith('assets/')
+                          ? Image.asset(
+                              avatarPath,
+                              fit: BoxFit.cover,
+                              width: 36,
+                              height: 36,
+                              errorBuilder: (context, error, stackTrace) => Icon(
+                                Icons.person,
+                                color: theme.border,
+                                size: 18,
+                              ),
+                            )
+                          : Image.file(
+                              File(avatarPath),
+                              fit: BoxFit.cover,
+                              width: 36,
+                              height: 36,
+                              errorBuilder: (context, error, stackTrace) => Icon(
+                                Icons.person,
+                                color: theme.border,
+                                size: 18,
+                              ),
+                            ))
+                  : Center(
+                      child: Icon(
+                        Icons.person,
+                        color: theme.border,
+                        size: 18,
+                      ),
+                    ),
             ),
           ),
           const SizedBox(width: 8),

@@ -49,7 +49,7 @@ class _LoadingBarState extends State<LoadingBar>
           width: widget.width,
           height: widget.height,
           decoration: BoxDecoration(
-            color: Colors.black.withValues(alpha: 0.08),
+            color: Colors.white.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(widget.height),
           ),
           child: Align(
@@ -59,12 +59,12 @@ class _LoadingBarState extends State<LoadingBar>
               height: widget.height,
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [LudoColors.mintGreen, LudoColors.mintGreenLight],
+                  colors: [LudoColors.cyan, LudoColors.brightBlue],
                 ),
                 borderRadius: BorderRadius.circular(widget.height),
                 boxShadow: [
                   BoxShadow(
-                    color: LudoColors.mintGreen.withValues(alpha: 0.6),
+                    color: LudoColors.cyan.withValues(alpha: 0.6),
                     blurRadius: 8,
                     spreadRadius: 1,
                   ),

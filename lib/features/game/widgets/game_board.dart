@@ -127,53 +127,31 @@ class _GameBoardState extends State<GameBoard> with TickerProviderStateMixin {
     if (widget.validTokens.isEmpty || boardSize <= 0) return;
 
     final cellSize = boardSize / 15;
-    final x = (localPos.dx / cellSize).floor().clamp(0, 14);
-    final y = (localPos.dy / cellSize).floor().clamp(0, 14);
+    final size = Size(boardSize, boardSize);
 
-    final tokensOnCell = widget.validTokens.where((t) => t.position?.x == x && t.position?.y == y).toList();
+    Token? closestToken;
+    double minDistance = double.infinity;
 
-    if (tokensOnCell.isNotEmpty) {
-      if (tokensOnCell.length == 1) {
-        if (widget.onTokenTap != null) {
-          widget.onTokenTap!(tokensOnCell.first);
-        } else {
-          context.read<GameBloc>().add(SelectToken(tokensOnCell.first));
-        }
+    for (final token in widget.validTokens) {
+      final player = widget.players.firstWhere(
+        (p) => p.tokens.any((t) => t.id == token.id),
+        orElse: () => widget.players.first,
+      );
+
+      final center = ModernBoardPainter.getTokenVisualCenter(token, player, cellSize, size);
+      final distance = (localPos - center).distance;
+      if (distance < minDistance) {
+        minDistance = distance;
+        closestToken = token;
+      }
+    }
+
+    // Accept taps within 1.0 cell size of the token's visual center
+    if (closestToken != null && minDistance < cellSize * 1.0) {
+      if (widget.onTokenTap != null) {
+        widget.onTokenTap!(closestToken);
       } else {
-        // Find closest by offset center
-        Token? closestToken;
-        double minDistance = double.infinity;
-        for (final token in tokensOnCell) {
-          final pos = token.position!;
-          var center = Offset(
-            (pos.x + 0.5) * cellSize,
-            (pos.y + 0.5) * cellSize,
-          );
-
-          // Check if there are other players' tokens on this cell
-          // (If so, we draw this token with an offset)
-          final allTokensAtPos = widget.players.expand((p) => p.tokens).where((t) => t.position == pos).toList();
-          final uniquePlayerIds = allTokensAtPos.map((t) => widget.players.firstWhere((p) => p.tokens.contains(t)).id).toSet();
-
-          if (uniquePlayerIds.length >= 2) {
-            final idx = allTokensAtPos.indexOf(token);
-            final off = idx * cellSize * 0.1;
-            center = center + Offset(-off, -off);
-          }
-
-          final distance = (localPos - center).distance;
-          if (distance < minDistance) {
-            minDistance = distance;
-            closestToken = token;
-          }
-        }
-        if (closestToken != null) {
-          if (widget.onTokenTap != null) {
-            widget.onTokenTap!(closestToken);
-          } else {
-            context.read<GameBloc>().add(SelectToken(closestToken));
-          }
-        }
+        context.read<GameBloc>().add(SelectToken(closestToken));
       }
     }
   }

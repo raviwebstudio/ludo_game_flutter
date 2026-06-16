@@ -57,12 +57,21 @@ class GameRepositoryImpl implements GameRepository {
   @override
   List<Player> initializePlayers(int playerCount, {List<Color>? customColors}) {
     final colors = customColors ?? playerColors;
+    
+    String getPlayerNameForIndex(int index) {
+      if (index == 0) {
+        final name = PlayerPrefs.getPlayerName(0).trim();
+        return name.isEmpty ? 'Player 1' : name;
+      }
+      return 'Player ${index + 1}';
+    }
+
     if (playerCount == 2) {
       return [
         Player(
           id: 0,
           color: colors[0],
-          name: PlayerPrefs.playerName(0),
+          name: getPlayerNameForIndex(0),
           tokens: List.generate(
             4,
             (tokenIndex) => Token(
@@ -75,7 +84,7 @@ class GameRepositoryImpl implements GameRepository {
         Player(
           id: 2,
           color: colors[1],
-          name: PlayerPrefs.playerName(1),
+          name: 'Player 2',
           tokens: List.generate(
             4,
             (tokenIndex) => Token(
@@ -92,7 +101,7 @@ class GameRepositoryImpl implements GameRepository {
         (index) => Player(
           id: index,
           color: colors[index],
-          name: PlayerPrefs.playerName(index),
+          name: getPlayerNameForIndex(index),
           tokens: List.generate(
             4,
             (tokenIndex) => Token(
@@ -106,11 +115,17 @@ class GameRepositoryImpl implements GameRepository {
     }
   }
 
-  bool isBlockedCell(BoardPosition position, int movingPlayerId, List<Player> players) {
+  bool isBlockedCell(
+    BoardPosition position,
+    int movingPlayerId,
+    List<Player> players, [
+    bool oppositeSideFriends = false,
+  ]) {
     if (isSafeZone(position)) return false;
 
     for (final player in players) {
       if (player.id == movingPlayerId) continue;
+      if (oppositeSideFriends && (movingPlayerId - player.id).abs() == 2) continue;
       final count = player.tokens.where((t) => !t.isHome && !t.isFinished && t.position == position).length;
       if (count >= 2) return true;
     }
@@ -123,6 +138,7 @@ class GameRepositoryImpl implements GameRepository {
     Token token,
     int diceValue, [
     List<Player> players = const [],
+    bool oppositeSideFriends = false,
   ]) {
     if (token.isFinished) return false;
     if (token.isHome && diceValue != 6) return false;
@@ -143,7 +159,7 @@ class GameRepositoryImpl implements GameRepository {
         pathPosition < nextPathPosition;
         pathPosition++) {
       final boardPosition = player.path[pathPosition];
-      if (isBlockedCell(boardPosition, player.id, players)) {
+      if (isBlockedCell(boardPosition, player.id, players, oppositeSideFriends)) {
         return false;
       }
     }
@@ -156,9 +172,10 @@ class GameRepositoryImpl implements GameRepository {
     Player player,
     int diceValue, [
     List<Player> players = const [],
+    bool oppositeSideFriends = false,
   ]) {
     return player.tokens.where((token) {
-      return isValidMove(player, token, diceValue, players);
+      return isValidMove(player, token, diceValue, players, oppositeSideFriends);
     }).toList();
   }
 
@@ -227,6 +244,7 @@ class GameRepositoryImpl implements GameRepository {
     required List<Player> players,
     required int currentPlayerIndex,
     required Token movedToken,
+    bool oppositeSideFriends = false,
   }) {
     final landingPosition = movedToken.position;
     if (landingPosition == null ||
@@ -245,6 +263,9 @@ class GameRepositoryImpl implements GameRepository {
       if (playerIndex == currentPlayerIndex) continue;
 
       final opponent = updatedPlayers[playerIndex];
+      if (oppositeSideFriends && (players[currentPlayerIndex].id - opponent.id).abs() == 2) {
+        continue;
+      }
 
       final newTokens = List<Token>.from(opponent.tokens);
       var capturedAnyToken = false;

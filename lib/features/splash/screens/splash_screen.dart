@@ -34,18 +34,7 @@ class _SplashScreenState extends State<SplashScreen> {
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFFF0ECFF), // soft purple tint
-              Color(0xFFF5F6FA), // cool off-white
-              Color(0xFFEEEFF5), // slightly darker cool gray
-            ],
-            stops: [0.0, 0.55, 1.0],
-          ),
-        ),
+        color: const Color(0xFF0D1B2A),
         child: Stack(
           children: [
             // ── Floating particles ──
@@ -68,11 +57,12 @@ class _SplashScreenState extends State<SplashScreen> {
                     const SizedBox(height: 12),
 
                     // "Fetching Arena..." label
-                    Text(
+                    const Text(
                       'Fetching Arena...',
                       style: TextStyle(
                         fontSize: 14,
-                        color: LudoColors.textMedium,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500,
                         letterSpacing: 1,
                       ),
                     ).animate().fadeIn(delay: 600.ms, duration: 600.ms),
@@ -86,50 +76,33 @@ class _SplashScreenState extends State<SplashScreen> {
 
                     const SizedBox(height: 40),
 
-                    // "LUDO" title
+                    // "LUDO ELITE" title
                     Text(
-                      'LUDO',
+                      'LUDO ELITE',
                       style: TextStyle(
-                        fontSize: 52,
-                        fontWeight: FontWeight.w900,
-                        color: LudoColors.textLight,
-                        letterSpacing: 8,
+                        fontSize: 48,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFFFFD700),
+                        letterSpacing: 6,
                         shadows: [
                           Shadow(
-                            color: LudoColors.purple.withValues(alpha: 0.35),
-                            blurRadius: 20,
+                            color: const Color(0xFFFFD700).withValues(alpha: 0.3),
+                            blurRadius: 15,
                           ),
                         ],
                       ),
                     ).animate().fadeIn(delay: 300.ms, duration: 600.ms)
                         .slideY(begin: 0.3, duration: 600.ms, curve: Curves.easeOut),
 
-                    // "ELITE" subtitle
-                    ShaderMask(
-                      shaderCallback: (bounds) => const LinearGradient(
-                        colors: [LudoColors.purpleLight, LudoColors.mintGreen],
-                      ).createShader(bounds),
-                      child: const Text(
-                        'ELITE',
-                        style: TextStyle(
-                          fontSize: 44,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 12,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ).animate().fadeIn(delay: 500.ms, duration: 600.ms)
-                        .slideY(begin: 0.3, duration: 600.ms, curve: Curves.easeOut),
-
                     const SizedBox(height: 16),
 
                     // Tagline
-                    Text(
+                    const Text(
                       'THE NEW STANDARD OF PLAY',
                       style: TextStyle(
                         fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: LudoColors.mintGreen.withValues(alpha: 0.8),
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF00E5A0),
                         letterSpacing: 3,
                       ),
                     ).animate().fadeIn(delay: 800.ms, duration: 600.ms),
@@ -163,10 +136,10 @@ class _SplashScreenState extends State<SplashScreen> {
           height: size,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: LudoColors.mintGreen.withValues(alpha: opacity),
+            color: LudoColors.cyan.withValues(alpha: opacity),
             boxShadow: [
               BoxShadow(
-                color: LudoColors.mintGreen.withValues(alpha: opacity * 0.5),
+                color: LudoColors.cyan.withValues(alpha: opacity * 0.5),
                 blurRadius: size * 2,
               ),
             ],

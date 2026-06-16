@@ -370,66 +370,61 @@ class _LoginScreenState extends State<LoginScreen> {
 class GoogleGLogoPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final double w = size.width;
-    final double r = w / 2;
-    final center = Offset(r, r);
-    final double strokeWidth = w * 0.22;
+    final double s = size.width / 24.0;
+    final paint = Paint()..style = PaintingStyle.fill;
 
-    final paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth
-      ..strokeCap = StrokeCap.square;
-
-    final double arcRadius = r - strokeWidth / 2;
-
-    // Red arc (top)
+    // Red (top)
     paint.color = const Color(0xFFEA4335);
-    canvas.drawArc(
-      Rect.fromCircle(center: center, radius: arcRadius),
-      -1.65 * 3.14159 / 2,
-      -0.95 * 3.14159 / 2,
-      false,
-      paint,
-    );
+    final redPath = Path()
+      ..moveTo(12 * s, 5.04 * s)
+      ..cubicTo(13.66 * s, 5.04 * s, 15.2 * s, 5.61 * s, 16.38 * s, 6.73 * s)
+      ..lineTo(19.65 * s, 3.46 * s)
+      ..cubicTo(17.73 * s, 1.35 * s, 15.08 * s, 0.75 * s, 12 * s, 0.75 * s)
+      ..cubicTo(7.42 * s, 0.75 * s, 3.51 * s, 3.39 * s, 1.63 * s, 7.23 * s)
+      ..lineTo(5.59 * s, 10.3 * s)
+      ..cubicTo(6.52 * s, 7.36 * s, 9 * s, 5.04 * s, 12 * s, 5.04 * s)
+      ..close();
+    canvas.drawPath(redPath, paint);
 
-    // Yellow arc (left)
+    // Yellow (left)
     paint.color = const Color(0xFFFBBC05);
-    canvas.drawArc(
-      Rect.fromCircle(center: center, radius: arcRadius),
-      1.75 * 3.14159 / 2,
-      -0.75 * 3.14159 / 2,
-      false,
-      paint,
-    );
+    final yellowPath = Path()
+      ..moveTo(1.63 * s, 7.23 * s)
+      ..cubicTo(0.99 * s, 8.52 * s, 0.63 * s, 9.97 * s, 0.63 * s, 11.5 * s)
+      ..cubicTo(0.63 * s, 13.03 * s, 0.99 * s, 14.48 * s, 1.63 * s, 15.77 * s)
+      ..lineTo(5.59 * s, 12.7 * s)
+      ..cubicTo(5.39 * s, 12.1 * s, 5.31 * s, 11.8 * s, 5.31 * s, 11.5 * s)
+      ..cubicTo(5.31 * s, 11.2 * s, 5.39 * s, 10.9 * s, 5.59 * s, 10.3 * s)
+      ..lineTo(1.63 * s, 7.23 * s)
+      ..close();
+    canvas.drawPath(yellowPath, paint);
 
-    // Green arc (bottom)
+    // Green (bottom)
     paint.color = const Color(0xFF34A853);
-    canvas.drawArc(
-      Rect.fromCircle(center: center, radius: arcRadius),
-      0.25 * 3.14159 / 2,
-      -1.0 * 3.14159 / 2,
-      false,
-      paint,
-    );
+    final greenPath = Path()
+      ..moveTo(12 * s, 17.96 * s)
+      ..cubicTo(9 * s, 17.96 * s, 6.52 * s, 15.64 * s, 5.59 * s, 12.7 * s)
+      ..lineTo(1.63 * s, 15.77 * s)
+      ..cubicTo(3.51 * s, 19.61 * s, 7.42 * s, 22.25 * s, 12 * s, 22.25 * s)
+      ..cubicTo(14.92 * s, 22.25 * s, 17.61 * s, 21.3 * s, 19.62 * s, 19.63 * s)
+      ..lineTo(15.76 * s, 16.63 * s)
+      ..cubicTo(14.63 * s, 17.39 * s, 13.4 * s, 17.96 * s, 12 * s, 17.96 * s)
+      ..close();
+    canvas.drawPath(greenPath, paint);
 
-    // Blue arc (right)
+    // Blue (right)
     paint.color = const Color(0xFF4285F4);
-    canvas.drawArc(
-      Rect.fromCircle(center: center, radius: arcRadius),
-      -0.75 * 3.14159 / 2,
-      0.75 * 3.14159 / 2,
-      false,
-      paint,
-    );
-
-    // Draw horizontal bar of the 'G'
-    final barPaint = Paint()
-      ..color = const Color(0xFF4285F4)
-      ..style = PaintingStyle.fill;
-    canvas.drawRect(
-      Rect.fromLTWH(r, r - strokeWidth / 2, r, strokeWidth),
-      barPaint,
-    );
+    final bluePath = Path()
+      ..moveTo(23.25 * s, 11.5 * s)
+      ..cubicTo(23.25 * s, 10.71 * s, 23.18 * s, 9.96 * s, 23.06 * s, 9.23 * s)
+      ..lineTo(12 * s, 9.23 * s)
+      ..lineTo(12 * s, 13.74 * s)
+      ..lineTo(18.47 * s, 13.74 * s)
+      ..cubicTo(18.18 * s, 15.22 * s, 17.33 * s, 16.47 * s, 16.07 * s, 17.32 * s)
+      ..lineTo(19.93 * s, 20.32 * s)
+      ..cubicTo(22.19 * s, 18.23 * s, 23.49 * s, 15.15 * s, 23.49 * s, 11.5 * s)
+      ..close();
+    canvas.drawPath(bluePath, paint);
   }
 
   @override

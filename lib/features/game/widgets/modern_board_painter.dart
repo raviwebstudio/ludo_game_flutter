@@ -422,10 +422,9 @@ class ModernBoardPainter extends CustomPainter {
         // In the home yard, draw tokens in their respective slots individually without stacking
         for (final token in tokensAtPos) {
           final player = tokenPlayer[token]!;
-          final center = Offset(
-            (pos.x + 0.5) * cellSize,
-            (pos.y + 0.5) * cellSize,
-          );
+          final tokenId = player.tokens.indexWhere((t) => t.id == token.id);
+          final tid = tokenId != -1 ? tokenId : token.id;
+          final center = getHomeSlotCenter(player.id, tid, cellSize, size);
 
           _draw3DToken(
             canvas,
@@ -705,6 +704,41 @@ class ModernBoardPainter extends CustomPainter {
 
       // Moving token
       _draw3DToken(canvas, currentCenter, returnRadius, tokenColor, false, false, count: 1);
+    }
+  }
+
+  static Offset getHomeSlotCenter(int playerId, int tokenId, double cellSize, Size size) {
+    final homeSize = 6 * cellSize;
+    final positions = [
+      Offset.zero,
+      Offset(size.width - homeSize, 0),
+      Offset(size.width - homeSize, size.height - homeSize),
+      Offset(0, size.height - homeSize),
+    ];
+    final id = playerId.clamp(0, 3);
+    final offset = positions[id];
+    final innerMargin = homeSize * 0.18;
+    final slotSize = (homeSize - innerMargin * 2) / 2;
+
+    final row = tokenId ~/ 2;
+    final col = tokenId % 2;
+
+    final cx = offset.dx + innerMargin + slotSize * (col + 0.5);
+    final cy = offset.dy + innerMargin + slotSize * (row + 0.5);
+    return Offset(cx, cy);
+  }
+
+  static Offset getTokenVisualCenter(Token token, Player player, double cellSize, Size size) {
+    if (token.isHome) {
+      final tokenId = player.tokens.indexWhere((t) => t.id == token.id);
+      final tid = tokenId != -1 ? tokenId : token.id;
+      return getHomeSlotCenter(player.id, tid, cellSize, size);
+    } else {
+      final pos = token.position!;
+      return Offset(
+        (pos.x + 0.5) * cellSize,
+        (pos.y + 0.5) * cellSize,
+      );
     }
   }
 

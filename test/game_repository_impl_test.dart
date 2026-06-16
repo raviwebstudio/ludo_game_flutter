@@ -226,6 +226,90 @@ void main() {
       expect(captureResult.players[1].tokens.first.isHome, isFalse);
     });
 
+    test('opposite-side friends can share a cell without capture', () {
+      final repository = GameRepositoryImpl();
+      final players = repository.initializePlayers(4);
+      final redPlayer = players[0];
+      final yellowPlayer = players[2];
+      final sharedPosition = redPlayer.path[1];
+
+      final redToken = redPlayer.tokens.first.copyWith(
+        isHome: false,
+        pathPosition: 1,
+        position: sharedPosition,
+      );
+      final yellowToken = yellowPlayer.tokens.first.copyWith(
+        isHome: false,
+        pathPosition: 0,
+        position: sharedPosition,
+      );
+
+      final redPlayerOnTrack = redPlayer.copyWith(
+        tokens: [redToken, ...redPlayer.tokens.skip(1)],
+      );
+      final yellowPlayerOnTrack = yellowPlayer.copyWith(
+        tokens: [yellowToken, ...yellowPlayer.tokens.skip(1)],
+      );
+
+      final captureResult = repository.handleCollision(
+        players: [
+          redPlayerOnTrack,
+          players[1],
+          yellowPlayerOnTrack,
+          players[3],
+        ],
+        currentPlayerIndex: 0,
+        movedToken: redToken,
+        oppositeSideFriends: true,
+      );
+
+      expect(captureResult.didCapture, isFalse);
+      expect(captureResult.players[2].tokens.first.isHome, isFalse);
+      expect(captureResult.players[2].tokens.first.position, sharedPosition);
+    });
+
+    test('opposite-side friend stacks do not block passing', () {
+      final repository = GameRepositoryImpl();
+      final players = repository.initializePlayers(4);
+      final redPlayer = players[0];
+      final yellowPlayer = players[2];
+      final movingToken = redPlayer.tokens.first.copyWith(
+        isHome: false,
+        pathPosition: 0,
+        position: redPlayer.path[0],
+      );
+      final redPlayerOnTrack = redPlayer.copyWith(
+        tokens: [movingToken, ...redPlayer.tokens.skip(1)],
+      );
+
+      final friendStackPosition = redPlayer.path[1];
+      final yellowTokens = List.of(yellowPlayer.tokens);
+      yellowTokens[0] = yellowTokens[0].copyWith(
+        isHome: false,
+        pathPosition: 0,
+        position: friendStackPosition,
+      );
+      yellowTokens[1] = yellowTokens[1].copyWith(
+        isHome: false,
+        pathPosition: 1,
+        position: friendStackPosition,
+      );
+      final yellowPlayerWithStack = yellowPlayer.copyWith(
+        tokens: yellowTokens,
+      );
+
+      expect(
+        repository.isValidMove(
+          redPlayerOnTrack,
+          movingToken,
+          2,
+          [redPlayerOnTrack, players[1], yellowPlayerWithStack, players[3]],
+          true,
+        ),
+        isTrue,
+      );
+    });
+
     test('winner is detected when every token is finished', () {
       final repository = GameRepositoryImpl();
       final player = repository.initializePlayers(1).first;

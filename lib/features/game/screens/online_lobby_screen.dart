@@ -5,7 +5,7 @@ import 'package:ludo_game/core/services/firebase_service.dart';
 import 'package:ludo_game/core/constants/colors.dart';
 import 'package:ludo_game/core/constants/dimensions.dart';
 import 'package:ludo_game/core/constants/text_styles.dart';
-import 'package:ludo_game/shared/widgets/glass_morphism.dart';
+// import 'package:ludo_game/shared/widgets/glass_morphism.dart';
 import 'package:ludo_game/shared/widgets/gradient_button.dart';
 import 'package:ludo_game/shared/widgets/modern_card.dart';
 
@@ -18,7 +18,7 @@ class OnlineLobbyScreen extends StatefulWidget {
 
 class _OnlineLobbyScreenState extends State<OnlineLobbyScreen> {
   final _firebaseService = getIt<FirebaseService>();
-  bool _isActionLoading = false;
+  final bool _isActionLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -101,7 +101,7 @@ class _OnlineLobbyScreenState extends State<OnlineLobbyScreen> {
                 child: GradientButton(
                   label: 'HOST NEW GAME',
                   isLoading: _isActionLoading,
-                  onPressed: _showHostGameBottomSheet,
+                  onPressed: () {},
                   colors: const [LudoColors.purple, LudoColors.purpleLight],
                 ),
               ),
@@ -216,7 +216,7 @@ class _OnlineLobbyScreenState extends State<OnlineLobbyScreen> {
 
           // Join Button
           ElevatedButton(
-            onPressed: joinedCount >= playerCount ? null : () => _onJoinLobby(lobby),
+            onPressed: null,
             style: ElevatedButton.styleFrom(
               backgroundColor: LudoColors.brightBlue,
               foregroundColor: Colors.white,
@@ -234,6 +234,7 @@ class _OnlineLobbyScreenState extends State<OnlineLobbyScreen> {
     );
   }
 
+  /*
   void _onJoinLobby(Map<String, dynamic> lobby) {
     final lobbyId = lobby['id'] as String;
     final players = lobby['players'] as List? ?? [];
@@ -372,7 +373,9 @@ class _OnlineLobbyScreenState extends State<OnlineLobbyScreen> {
       },
     );
   }
+  */
 
+  /*
   void _showHostGameBottomSheet() {
     int selectedPlayerCount = 4;
     Color selectedColor = LudoColors.redToken;
@@ -537,7 +540,9 @@ class _OnlineLobbyScreenState extends State<OnlineLobbyScreen> {
       },
     );
   }
+  */
 
+  /*
   void _showErrorSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -546,4 +551,5 @@ class _OnlineLobbyScreenState extends State<OnlineLobbyScreen> {
       ),
     );
   }
+  */
 }

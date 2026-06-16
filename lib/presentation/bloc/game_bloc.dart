@@ -23,10 +23,15 @@ abstract class GameEvent extends Equatable {
 class StartGame extends GameEvent {
   final int playerCount;
   final List<Color>? playerColors;
-  StartGame(this.playerCount, {this.playerColors});
+  final bool oppositeSideFriends;
+  StartGame(
+    this.playerCount, {
+    this.playerColors,
+    this.oppositeSideFriends = false,
+  });
 
   @override
-  List<Object?> get props => [playerCount, playerColors];
+  List<Object?> get props => [playerCount, playerColors, oppositeSideFriends];
 }
 
 class RollDice extends GameEvent {
@@ -124,6 +129,7 @@ class GameState extends Equatable {
   final CaptureEffect? captureEffect;
   final List<int> finishOrder;
   final int bonusTurns;
+  final bool oppositeSideFriends;
 
   const GameState({
     this.players = const [],
@@ -137,6 +143,7 @@ class GameState extends Equatable {
     this.captureEffect,
     this.finishOrder = const [],
     this.bonusTurns = 0,
+    this.oppositeSideFriends = false,
   });
 
   factory GameState.fromJson(Map<String, dynamic> json) {
@@ -164,6 +171,7 @@ class GameState extends Equatable {
               .toList() ??
           const [],
       bonusTurns: json['bonusTurns'] as int? ?? 0,
+      oppositeSideFriends: json['oppositeSideFriends'] as bool? ?? false,
     );
   }
 
@@ -179,6 +187,7 @@ class GameState extends Equatable {
         'captureEffect': captureEffect?.toJson(),
         'finishOrder': finishOrder,
         'bonusTurns': bonusTurns,
+        'oppositeSideFriends': oppositeSideFriends,
       };
 
   GameState copyWith({
@@ -193,6 +202,7 @@ class GameState extends Equatable {
     Object? captureEffect = _captureEffectNotSet,
     List<int>? finishOrder,
     int? bonusTurns,
+    bool? oppositeSideFriends,
   }) {
     return GameState(
       players: players ?? this.players,
@@ -210,6 +220,7 @@ class GameState extends Equatable {
           : captureEffect as CaptureEffect?,
       finishOrder: finishOrder ?? this.finishOrder,
       bonusTurns: bonusTurns ?? this.bonusTurns,
+      oppositeSideFriends: oppositeSideFriends ?? this.oppositeSideFriends,
     );
   }
 
@@ -226,6 +237,7 @@ class GameState extends Equatable {
         captureEffect,
         finishOrder,
         bonusTurns,
+        oppositeSideFriends,
       ];
 }
 
@@ -257,6 +269,8 @@ class GameBloc extends Bloc<GameEvent, GameState> {
       captureEffect: null,
       finishOrder: const [],
       bonusTurns: 0,
+      oppositeSideFriends:
+          event.playerCount == 4 && event.oppositeSideFriends,
     ));
   }
 
@@ -273,6 +287,7 @@ class GameBloc extends Bloc<GameEvent, GameState> {
       currentPlayer,
       diceValue,
       state.players,
+      state.oppositeSideFriends,
     );
 
     // If rolling a 6, grant a bonus turn (increment bonusTurns)
@@ -327,6 +342,7 @@ class GameBloc extends Bloc<GameEvent, GameState> {
       selectedToken,
       diceValue,
       state.players,
+      state.oppositeSideFriends,
     )) {
       return;
     }
@@ -446,6 +462,7 @@ class GameBloc extends Bloc<GameEvent, GameState> {
       players: updatedPlayers,
       currentPlayerIndex: currentPlayerIndex,
       movedToken: token,
+      oppositeSideFriends: state.oppositeSideFriends,
     );
     final didCapture = captureResult.didCapture;
 

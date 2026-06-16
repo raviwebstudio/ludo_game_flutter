@@ -223,6 +223,12 @@ class _PlayerSelectorState extends State<PlayerSelector> {
                       child: GestureDetector(
                         onTap: () => setState(() {
                           _selectedCount = count;
+                          _currentPlayerColors = [
+                            LudoColors.redToken,
+                            LudoColors.greenToken,
+                            LudoColors.yellowToken,
+                            LudoColors.blueToken,
+                          ];
                           _updateSelectedColors();
                         }),
                         child: AnimatedContainer(

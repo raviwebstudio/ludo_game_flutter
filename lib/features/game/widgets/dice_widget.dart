@@ -43,17 +43,17 @@ class _DiceWidgetState extends State<DiceWidget> with TickerProviderStateMixin {
   late final Tween<double> _rotationTween;
   late final Tween<double> _rollScaleTween;
 
+  static int _lastRolledValue = 1; // Persists last rolled value across turn changes and widget recreations
+
   Timer? _faceTimer;
   int _faceIdx = 0;
-  int? _displayValue;
-  int? _lastSettled;
+  int? _currentFace;
   bool _isRolling = false;
 
   @override
   void initState() {
     super.initState();
-    _displayValue = widget.value ?? 1; // Default to 1 instead of null
-    _lastSettled = widget.value ?? 1;
+    _currentFace = widget.value ?? _lastRolledValue;
 
     _rollCtrl = AnimationController(vsync: this, duration: _rollDuration);
     _bounceCtrl = AnimationController(
@@ -79,20 +79,21 @@ class _DiceWidgetState extends State<DiceWidget> with TickerProviderStateMixin {
   @override
   void didUpdateWidget(covariant DiceWidget old) {
     super.didUpdateWidget(old);
-    if (_isRolling) return;
-
-    if (widget.value == null) {
-      // Reset the display value to 1 when value is null (e.g. turn changed or game restarted)
+    
+    if (!_isRolling) {
+      _rollCtrl.stop();
+      _bounceCtrl.stop();
       setState(() {
-        _displayValue = 1;
-        _lastSettled = null;
+        _currentFace = widget.value ?? _lastRolledValue;
       });
-      return;
-    }
-
-    final v = widget.value;
-    if (v != null && v != old.value && v != _lastSettled) {
-      _showFinal(v);
+    } else {
+      final v = widget.value;
+      if (v != null && v != old.value) {
+        if (!_rollCtrl.isAnimating) {
+          _isRolling = false;
+          _showFinal(v);
+        }
+      }
     }
   }
 
@@ -113,7 +114,7 @@ class _DiceWidgetState extends State<DiceWidget> with TickerProviderStateMixin {
     setState(() {
       _isRolling = true;
       _faceIdx = 0;
-      _displayValue = _faces.first;
+      _currentFace = _faces.first;
     });
 
     _startFaceTimer();
@@ -126,15 +127,23 @@ class _DiceWidgetState extends State<DiceWidget> with TickerProviderStateMixin {
       final result = await widget.onRoll();
       if (!mounted) return;
 
-      setState(() => _isRolling = false);
-      if (result != null) _showFinal(result);
+      setState(() {
+        _isRolling = false;
+        _currentFace = result ?? widget.value ?? _lastRolledValue;
+        if (_currentFace != null) {
+          _lastRolledValue = _currentFace!;
+        }
+      });
+      if (_currentFace != null) {
+        _showFinal(_currentFace!);
+      }
     } catch (_) {
       if (!mounted) return;
       _stopFaceTimer();
       _rollCtrl.reset();
       setState(() {
         _isRolling = false;
-        _displayValue = widget.value ?? 1;
+        _currentFace = widget.value ?? _lastRolledValue;
       });
     }
   }
@@ -145,7 +154,7 @@ class _DiceWidgetState extends State<DiceWidget> with TickerProviderStateMixin {
       if (!mounted) return;
       setState(() {
         _faceIdx = (_faceIdx + 1) % _faces.length;
-        _displayValue = _faces[_faceIdx];
+        _currentFace = _faces[_faceIdx];
       });
     });
   }
@@ -158,8 +167,8 @@ class _DiceWidgetState extends State<DiceWidget> with TickerProviderStateMixin {
   void _showFinal(int v) {
     if (!mounted) return;
     setState(() {
-      _displayValue = v;
-      _lastSettled = v;
+      _currentFace = v;
+      _lastRolledValue = v;
     });
     unawaited(HapticService.selection());
     unawaited(_bounceCtrl.forward(from: 0));
@@ -167,8 +176,12 @@ class _DiceWidgetState extends State<DiceWidget> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    if (!_isRolling) {
+      _currentFace = widget.value ?? _lastRolledValue;
+    }
+
     final canTap = widget.enabled && !_isRolling;
-    final faceValue = _displayValue ?? widget.value ?? 1;
+    final faceValue = _currentFace ?? 1;
     final activeColor = widget.activeColor ?? LudoColors.purple;
 
     return GestureDetector(

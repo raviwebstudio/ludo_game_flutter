@@ -104,6 +104,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     blur: 12,
                     borderRadius: BorderRadius.circular(LudoDimensions.radius16),
                     padding: const EdgeInsets.all(16),
+                    borderColor: LudoColors.cyan.withValues(alpha: 0.2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: LudoColors.cyan.withValues(alpha: 0.12),
+                        blurRadius: 16,
+                        spreadRadius: 1,
+                      ),
+                    ],
                     child: Column(
                       children: [
                         _buildToggleTile(
@@ -113,7 +121,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           onChanged: _toggleSound,
                         ),
                         if (_soundEnabled) ...[
-                          const Divider(color: Colors.black12),
+                          Divider(color: Colors.white.withValues(alpha: 0.08)),
                           Padding(
                             padding: const EdgeInsets.symmetric(vertical: 8.0),
                             child: Row(
@@ -123,10 +131,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 Expanded(
                                   child: SliderTheme(
                                     data: SliderThemeData(
-                                      activeTrackColor: LudoColors.brightBlue,
+                                      activeTrackColor: LudoColors.cyan,
                                       inactiveTrackColor: Colors.black.withValues(alpha: 0.08),
-                                      thumbColor: LudoColors.brightBlue,
-                                      overlayColor: LudoColors.brightBlue.withValues(alpha: 0.2),
+                                      thumbColor: LudoColors.cyan,
+                                      overlayColor: LudoColors.cyan.withValues(alpha: 0.2),
                                       trackHeight: 4,
                                     ),
                                     child: Slider(
@@ -135,12 +143,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     ),
                                   ),
                                 ),
-                                const Icon(Icons.volume_up, color: LudoColors.brightBlue, size: 20),
+                                const Icon(Icons.volume_up, color: LudoColors.cyan, size: 20),
                               ],
                             ),
                           ),
                         ],
-                        const Divider(color: Colors.black12),
+                        Divider(color: Colors.white.withValues(alpha: 0.08)),
                         _buildToggleTile(
                           icon: Icons.vibration,
                           title: 'Haptic Feedback',
@@ -161,6 +169,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     blur: 12,
                     borderRadius: BorderRadius.circular(LudoDimensions.radius16),
                     padding: const EdgeInsets.all(16),
+                    borderColor: LudoColors.cyan.withValues(alpha: 0.2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: LudoColors.cyan.withValues(alpha: 0.12),
+                        blurRadius: 16,
+                        spreadRadius: 1,
+                      ),
+                    ],
                     child: Column(
                       children: [
                         _buildDropdownTile(
@@ -184,12 +200,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     blur: 12,
                     borderRadius: BorderRadius.circular(LudoDimensions.radius16),
                     padding: const EdgeInsets.all(16),
+                    borderColor: LudoColors.cyan.withValues(alpha: 0.2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: LudoColors.cyan.withValues(alpha: 0.12),
+                        blurRadius: 16,
+                        spreadRadius: 1,
+                      ),
+                    ],
                     child: Column(
                       children: [
                         _buildInfoTile('Version', '1.0.0 (Elite Edition)'),
-                        const Divider(color: Colors.black12),
-                        _buildInfoTile('Developer', 'Antigravity AI'),
-                        const Divider(color: Colors.black12),
+                        Divider(color: Colors.white.withValues(alpha: 0.08)),
+                        _buildInfoTile('Developer', 'Crowcent'),
+                        Divider(color: Colors.white.withValues(alpha: 0.08)),
                         _buildInfoTile('Engine', 'Flutter 3.x'),
                       ],
                     ),
@@ -209,7 +233,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: Text(
         title,
         style: LudoTextStyles.labelSmall.copyWith(
-          color: LudoColors.mintGreen,
+          color: LudoColors.cyan,
           fontWeight: FontWeight.w800,
           letterSpacing: 1.2,
         ),
@@ -241,8 +265,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeThumbColor: LudoColors.mintGreen,
-            activeTrackColor: LudoColors.mintGreen.withValues(alpha: 0.3),
+            activeThumbColor: LudoColors.cyan,
+            activeTrackColor: LudoColors.cyan.withValues(alpha: 0.3),
             inactiveThumbColor: LudoColors.textMedium,
             inactiveTrackColor: Colors.black.withValues(alpha: 0.08),
           ),
@@ -277,7 +301,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             value: value,
             dropdownColor: LudoColors.darkNavyLight,
             underline: const SizedBox(),
-            icon: const Icon(Icons.arrow_drop_down, color: LudoColors.mintGreen),
+            icon: const Icon(Icons.arrow_drop_down, color: LudoColors.cyan),
             items: options.map((opt) {
               return DropdownMenuItem<String>(
                 value: opt,
