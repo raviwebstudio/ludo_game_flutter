@@ -3,6 +3,9 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:ludo_game/injection.dart';
+import 'package:ludo_game/core/services/firebase_service.dart';
 import '../../../core/constants/colors.dart';
 import '../../../core/constants/dimensions.dart';
 import '../../../core/constants/text_styles.dart';
@@ -20,9 +23,9 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  String _name = 'Player 1';
+  String _name = 'Guest Player';
   String? _avatarPath;
-  int _coins = 25450;
+  int _coins = 0;
   StreamSubscription<void>? _changesSubscription;
 
   @override
@@ -38,10 +41,28 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
+  String _resolveName() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      if (user.isAnonymous) {
+        return 'Guest Player';
+      }
+      return user.displayName ?? 'Guest Player';
+    }
+    final localName = PlayerPrefs.playerName(0);
+    if (localName == 'Player 1' ||
+        localName == 'Player 2' ||
+        localName == 'Player 3' ||
+        localName == 'Player 4') {
+      return 'Guest Player';
+    }
+    return localName;
+  }
+
   void _loadPrefs() {
     if (!mounted) return;
     setState(() {
-      _name = PlayerPrefs.playerName(0);
+      _name = _resolveName();
       _avatarPath = PlayerPrefs.playerAvatarPath(0);
       _coins = PlayerPrefs.coins;
     });
@@ -172,7 +193,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   color: LudoColors.darkNavyLight,
                 ),
-                child: _avatarPath == null
+                child: _avatarPath == null || _avatarPath!.isEmpty
                     ? const Icon(Icons.person, color: LudoColors.textMedium, size: 22)
                     : ClipOval(
                         child: _avatarPath!.startsWith('assets/')
@@ -281,10 +302,25 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
 
-        // Action Buttons: Settings Gear + Notification Bell
+        // Action Buttons: Notification Bell + Settings Gear + Logout
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // Notification bell
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: LudoColors.darkNavyLight,
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.05),
+                ),
+              ),
+              child: const Icon(Icons.notifications_none,
+                  color: LudoColors.textMedium, size: 18),
+            ),
+            const SizedBox(width: 8),
             // Settings Gear
             GestureDetector(
               onTap: () => Navigator.pushNamed(context, '/settings'),
@@ -303,24 +339,135 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             const SizedBox(width: 8),
-            // Notification bell
-            Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: LudoColors.darkNavyLight,
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.05),
+            // Logout
+            GestureDetector(
+              onTap: () => _confirmLogout(context),
+              child: Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: LudoColors.darkNavyLight,
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.05),
+                  ),
                 ),
+                child: const Icon(Icons.logout,
+                    color: LudoColors.textLight, size: 18),
               ),
-              child: const Icon(Icons.notifications_none,
-                  color: LudoColors.textMedium, size: 18),
             ),
           ],
         ),
       ],
     );
+  }
+
+  Future<void> _confirmLogout(BuildContext context) async {
+    final res = await showDialog<bool>(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.5),
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Container(
+            padding: const EdgeInsets.all(LudoDimensions.spacing24),
+            decoration: BoxDecoration(
+              color: const Color(0xFF162236),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.07),
+                width: 1.5,
+              ),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: const Color(0xFFE74C3C).withValues(alpha: 0.12),
+                  ),
+                  child: const Icon(
+                    Icons.logout_rounded,
+                    color: Color(0xFFE74C3C),
+                    size: 40,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Logout?',
+                  style: LudoTextStyles.headlineSmall.copyWith(
+                    color: const Color(0xFFF0F4FF),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Are you sure you want to logout?',
+                  textAlign: TextAlign.center,
+                  style: LudoTextStyles.bodyMedium.copyWith(
+                    color: const Color(0xFF8BA3C1),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        style: TextButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        child: Text(
+                          'Cancel',
+                          style: LudoTextStyles.labelBold.copyWith(
+                            color: Colors.white,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.pop(context, true),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFE74C3C),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          elevation: 0,
+                        ),
+                        child: Text(
+                          'Logout',
+                          style: LudoTextStyles.labelBold.copyWith(
+                            color: Colors.white,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    if (res == true) {
+      final firebaseService = getIt<FirebaseService>();
+      await firebaseService.signOut();
+      if (context.mounted) {
+        Navigator.pushNamedAndRemoveUntil(context, '/auth', (route) => false);
+      }
+    }
   }
 
   // ── Diamond Board Preview ───────────────────────────────────────────────

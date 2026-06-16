@@ -6,6 +6,9 @@ import 'package:ludo_game/core/constants/dimensions.dart';
 import 'package:ludo_game/core/constants/text_styles.dart';
 import 'package:ludo_game/shared/widgets/gradient_button.dart';
 import 'package:ludo_game/core/services/player_prefs.dart';
+import 'package:ludo_game/injection.dart';
+import 'package:ludo_game/core/services/firebase_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:io';
 
 /// Premium Profile and Player Statistics Screen.
@@ -23,7 +26,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   int _totalGames = 0;
   int _wins = 0;
   int _winStreak = 0;
-  int _coins = 25450;
+  int _coins = 0;
+  bool _showAvatarSection = false;
 
   final List<String> _presets = [
     'assets/avatars/lion.png',
@@ -59,9 +63,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.dispose();
   }
 
+  String _resolveName() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      if (user.isAnonymous) {
+        return 'Guest Player';
+      }
+      return user.displayName ?? 'Guest Player';
+    }
+    final localName = PlayerPrefs.playerName(0);
+    if (localName == 'Player 1' ||
+        localName == 'Player 2' ||
+        localName == 'Player 3' ||
+        localName == 'Player 4') {
+      return 'Guest Player';
+    }
+    return localName;
+  }
+
   Future<void> _loadPrefs() async {
     setState(() {
-      _name = PlayerPrefs.playerName(0);
+      _name = _resolveName();
       _avatarPath = PlayerPrefs.playerAvatarPath(0);
       _xp = PlayerPrefs.xp;
       _totalGames = PlayerPrefs.totalGames;
@@ -71,7 +93,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
   }
 
-
+  Future<void> _syncToFirestore() async {
+    final firebaseService = getIt<FirebaseService>();
+    if (firebaseService.currentUid != null) {
+      try {
+        await firebaseService.saveLocalDataToFirestore();
+      } catch (e) {
+        debugPrint('Failed to sync to Firestore: $e');
+      }
+    }
+  }
 
   Future<void> _editName() async {
     final controller = TextEditingController(text: _name);
@@ -88,6 +119,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
     if (res != null && res.trim().isNotEmpty) {
       await PlayerPrefs.setPlayerName(0, res.trim());
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null && !user.isAnonymous) {
+        await user.updateDisplayName(res.trim());
+      }
+      await _syncToFirestore();
     }
   }
 
@@ -112,6 +148,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final parsed = int.tryParse(res.trim());
       if (parsed != null && parsed >= 0) {
         await PlayerPrefs.setCoins(parsed);
+        await _syncToFirestore();
       }
     }
   }
@@ -137,6 +174,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final parsed = int.tryParse(res.trim());
       if (parsed != null && parsed >= 0) {
         await saveFunc(parsed);
+        await _syncToFirestore();
       }
     }
   }
@@ -155,8 +193,117 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
     if (res == true) {
       await PlayerPrefs.resetStats();
+      await _syncToFirestore();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Stats reset completed')));
+      }
+    }
+  }
+
+  Future<void> _confirmLogout() async {
+    final res = await showDialog<bool>(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.5),
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Container(
+            padding: const EdgeInsets.all(LudoDimensions.spacing24),
+            decoration: BoxDecoration(
+              color: const Color(0xFF162236),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.07),
+                width: 1.5,
+              ),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: const Color(0xFFE74C3C).withValues(alpha: 0.12),
+                  ),
+                  child: const Icon(
+                    Icons.logout_rounded,
+                    color: Color(0xFFE74C3C),
+                    size: 40,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Logout?',
+                  style: LudoTextStyles.headlineSmall.copyWith(
+                    color: const Color(0xFFF0F4FF),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Are you sure you want to logout?',
+                  textAlign: TextAlign.center,
+                  style: LudoTextStyles.bodyMedium.copyWith(
+                    color: const Color(0xFF8BA3C1),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        style: TextButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        child: Text(
+                          'Cancel',
+                          style: LudoTextStyles.labelBold.copyWith(
+                            color: Colors.white,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.pop(context, true),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFE74C3C),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          elevation: 0,
+                        ),
+                        child: Text(
+                          'Logout',
+                          style: LudoTextStyles.labelBold.copyWith(
+                            color: Colors.white,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    if (res == true) {
+      final firebaseService = getIt<FirebaseService>();
+      await firebaseService.signOut();
+      if (mounted) {
+        Navigator.pushNamedAndRemoveUntil(context, '/auth', (route) => false);
       }
     }
   }
@@ -195,66 +342,105 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Center(
                     child: Column(
                       children: [
-                        Container(
-                          width: 120,
-                          height: 120,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: const LinearGradient(
-                              colors: [LudoColors.purple, LudoColors.softBlue],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: LudoColors.purple.withValues(alpha: 0.4),
-                                blurRadius: 24,
-                                spreadRadius: 2,
-                              ),
-                            ],
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(4.0),
-                            child: Container(
-                              decoration: const BoxDecoration(
+                        Stack(
+                          children: [
+                            Container(
+                              width: 120,
+                              height: 120,
+                              decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: LudoColors.darkNavyDark,
+                                gradient: const LinearGradient(
+                                  colors: [LudoColors.purple, LudoColors.softBlue],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: LudoColors.purple.withValues(alpha: 0.4),
+                                    blurRadius: 24,
+                                    spreadRadius: 2,
+                                  ),
+                                ],
                               ),
-                              child: Center(
-                                child: _avatarPath == null
-                                    ? const Icon(
-                                        Icons.person,
-                                        color: LudoColors.textLight,
-                                        size: 64,
-                                      )
-                                    : ClipOval(
-                                        child: _avatarPath!.startsWith('assets/')
-                                            ? Image.asset(
-                                                _avatarPath!,
-                                                fit: BoxFit.cover,
-                                                width: 120,
-                                                height: 120,
-                                                errorBuilder: (context, error, stackTrace) => const Icon(
-                                                  Icons.person,
-                                                  color: LudoColors.textLight,
-                                                  size: 64,
-                                                ),
-                                              )
-                                            : Image.file(
-                                                File(_avatarPath!),
-                                                fit: BoxFit.cover,
-                                                width: 120,
-                                                height: 120,
-                                                errorBuilder: (context, error, stackTrace) => const Icon(
-                                                  Icons.person,
-                                                  color: LudoColors.textLight,
-                                                  size: 64,
-                                                ),
-                                              ),
-                                      ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(4.0),
+                                child: Container(
+                                  decoration: const BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: LudoColors.darkNavyDark,
+                                  ),
+                                  child: Center(
+                                    child: _avatarPath == null || _avatarPath!.isEmpty
+                                        ? const Icon(
+                                            Icons.person,
+                                            color: LudoColors.textLight,
+                                            size: 64,
+                                          )
+                                        : ClipOval(
+                                            child: _avatarPath!.startsWith('assets/')
+                                                ? Image.asset(
+                                                    _avatarPath!,
+                                                    fit: BoxFit.cover,
+                                                    width: 120,
+                                                    height: 120,
+                                                    errorBuilder: (context, error, stackTrace) => const Icon(
+                                                      Icons.person,
+                                                      color: LudoColors.textLight,
+                                                      size: 64,
+                                                    ),
+                                                  )
+                                                : Image.file(
+                                                    File(_avatarPath!),
+                                                    fit: BoxFit.cover,
+                                                    width: 120,
+                                                    height: 120,
+                                                    errorBuilder: (context, error, stackTrace) => const Icon(
+                                                      Icons.person,
+                                                      color: LudoColors.textLight,
+                                                      size: 64,
+                                                    ),
+                                                  ),
+                                          ),
+                                  ),
+                                ),
                               ),
                             ),
-                          ),
+                            Positioned(
+                              bottom: 0,
+                              right: 0,
+                              child: GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    _showAvatarSection = !_showAvatarSection;
+                                  });
+                                },
+                                child: Container(
+                                  width: 32,
+                                  height: 32,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: LudoColors.mintGreen,
+                                    border: Border.all(
+                                      color: const Color(0xFF162236),
+                                      width: 2,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(alpha: 0.2),
+                                        blurRadius: 4,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: const Icon(
+                                    Icons.edit,
+                                    color: Colors.white,
+                                    size: 16,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack),
                         const SizedBox(height: 16),
                         GestureDetector(
@@ -422,80 +608,84 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                   const SizedBox(height: LudoDimensions.spacing24),
 
-                  // Preset Avatar Section
-                  Text(
-                    'SELECT PRESET AVATAR',
-                    style: LudoTextStyles.labelSmall.copyWith(
-                      color: const Color(0xFF00E5A0),
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF162236),
-                      borderRadius: BorderRadius.circular(LudoDimensions.radius16),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.07),
-                        width: 1,
+                  if (_showAvatarSection) ...[
+                    Text(
+                      'SELECT PRESET AVATAR',
+                      style: LudoTextStyles.labelSmall.copyWith(
+                        color: const Color(0xFF00E5A0),
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.2,
                       ),
                     ),
-                    padding: const EdgeInsets.all(16),
-                    child: GridView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 4,
-                        crossAxisSpacing: 12,
-                        mainAxisSpacing: 12,
+                    const SizedBox(height: 8),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF162236),
+                        borderRadius: BorderRadius.circular(LudoDimensions.radius16),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.07),
+                          width: 1,
+                        ),
                       ),
-                      itemCount: _presets.length,
-                      itemBuilder: (context, index) {
-                        final avatar = _presets[index];
-                        final isSelected = _avatarPath == avatar;
-                        return GestureDetector(
-                          onTap: () async {
-                            await PlayerPrefs.setPlayerAvatarPath(0, avatar);
-                            setState(() {
-                              _avatarPath = avatar;
-                            });
-                          },
-                          child: Container(
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: isSelected
-                                    ? LudoColors.mintGreen
-                                    : Colors.grey.withValues(alpha: 0.4),
-                                width: isSelected ? 3.0 : 1.5,
+                      padding: const EdgeInsets.all(16),
+                      child: GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 4,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                        ),
+                        itemCount: _presets.length,
+                        itemBuilder: (context, index) {
+                          final avatar = _presets[index];
+                          final isSelected = _avatarPath == avatar;
+                          return GestureDetector(
+                            onTap: () async {
+                              await PlayerPrefs.setPlayerAvatarPath(0, avatar);
+                              await _syncToFirestore();
+                              setState(() {
+                                _avatarPath = avatar;
+                                _showAvatarSection = false;
+                              });
+                            },
+                            child: Container(
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: isSelected
+                                      ? LudoColors.mintGreen
+                                      : Colors.grey.withValues(alpha: 0.4),
+                                  width: isSelected ? 3.0 : 1.5,
+                                ),
+                                boxShadow: isSelected
+                                    ? [
+                                        BoxShadow(
+                                          color: LudoColors.mintGreen.withValues(alpha: 0.35),
+                                          blurRadius: 8,
+                                          spreadRadius: 1,
+                                        )
+                                      ]
+                                    : null,
                               ),
-                              boxShadow: isSelected
-                                  ? [
-                                      BoxShadow(
-                                        color: LudoColors.mintGreen.withValues(alpha: 0.35),
-                                        blurRadius: 8,
-                                        spreadRadius: 1,
-                                      )
-                                    ]
-                                  : null,
-                            ),
-                            padding: const EdgeInsets.all(3),
-                            child: ClipOval(
-                              child: Image.asset(
-                                avatar,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) => const Icon(
-                                  Icons.person,
-                                  color: LudoColors.textLight,
+                              padding: const EdgeInsets.all(3),
+                              child: ClipOval(
+                                child: Image.asset(
+                                  avatar,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) => const Icon(
+                                    Icons.person,
+                                    color: LudoColors.textLight,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                        );
-                      },
-                    ),
-                  ).animate().fadeIn(delay: 250.ms, duration: 400.ms),
+                          );
+                        },
+                      ),
+                    ).animate().fadeIn(delay: 100.ms, duration: 200.ms),
+                    const SizedBox(height: LudoDimensions.spacing24),
+                  ],
 
                   const SizedBox(height: LudoDimensions.spacing32),
 
@@ -503,6 +693,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     child: GradientButton(
                       label: 'RESET ALL STATS',
                       onPressed: _confirmReset,
+                      colors: const [LudoColors.redToken, Color(0xFFC0392B)],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Center(
+                    child: GradientButton(
+                      label: 'LOGOUT',
+                      onPressed: _confirmLogout,
                       colors: const [LudoColors.redToken, Color(0xFFC0392B)],
                     ),
                   ),

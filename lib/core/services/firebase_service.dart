@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:ludo_game/core/services/player_prefs.dart';
 
 class FirebaseService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -30,7 +31,9 @@ class FirebaseService {
         'uid': cred.user!.uid,
         'name': name,
         'email': email,
-        'coins': 1000,
+        'coins': 0,
+        'gems': 0,
+        'xp': 0,
         'totalGames': 0,
         'wins': 0,
         'winStreak': 0,
@@ -43,6 +46,63 @@ class FirebaseService {
   // Sign Out
   Future<void> signOut() async {
     await _auth.signOut();
+  }
+
+  // Save all local player prefs data to Firestore
+  Future<void> saveLocalDataToFirestore() async {
+    final uid = currentUid;
+    if (uid == null) return;
+
+    final name = PlayerPrefs.playerName(0);
+    final avatar = PlayerPrefs.playerAvatarPath(0) ?? '';
+    final coins = PlayerPrefs.coins;
+    final gems = PlayerPrefs.gems;
+    final xp = PlayerPrefs.xp;
+    final totalGames = PlayerPrefs.totalGames;
+    final wins = PlayerPrefs.wins;
+    final winStreak = PlayerPrefs.winStreak;
+
+    await _db.collection('users').doc(uid).set({
+      'uid': uid,
+      'name': name,
+      'avatar': avatar,
+      'coins': coins,
+      'gems': gems,
+      'xp': xp,
+      'totalGames': totalGames,
+      'wins': wins,
+      'winStreak': winStreak,
+    }, SetOptions(merge: true));
+  }
+
+  // Load data from Firestore into local PlayerPrefs
+  Future<void> loadDataFromFirestore() async {
+    final uid = currentUid;
+    if (uid == null) return;
+
+    final doc = await _db.collection('users').doc(uid).get();
+    if (doc.exists) {
+      final data = doc.data();
+      if (data != null) {
+        final name = data['name'] as String?;
+        if (name != null && name.isNotEmpty) {
+          await PlayerPrefs.setPlayerName(0, name);
+        }
+        final avatar = data['avatar'] as String?;
+        if (avatar != null) {
+          await PlayerPrefs.setPlayerAvatarPath(0, avatar.isEmpty ? '' : avatar);
+        }
+        await PlayerPrefs.setCoins(data['coins'] as int? ?? 0);
+        await PlayerPrefs.setGems(data['gems'] as int? ?? 0);
+        await PlayerPrefs.setXp(data['xp'] as int? ?? 0);
+        await PlayerPrefs.setTotalGames(data['totalGames'] as int? ?? 0);
+        await PlayerPrefs.setWins(data['wins'] as int? ?? 0);
+        await PlayerPrefs.setWinStreak(data['winStreak'] as int? ?? 0);
+      }
+    } else {
+      // If Firestore doc does not exist yet, initialize it from local
+      await saveLocalDataToFirestore();
+    }
   }
 
   // Retrieve user statistics from Firestore

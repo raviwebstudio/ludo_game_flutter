@@ -48,11 +48,18 @@ class PlayerPrefs {
   }
 
   static const _coinsKey = '${_keyPrefix}coins';
+  static const _gemsKey = '${_keyPrefix}gems';
   static const _player1ColorKey = '${_keyPrefix}player1_color';
 
-  static int get coins => _prefs?.getInt(_coinsKey) ?? 25450;
+  static int get coins => _prefs?.getInt(_coinsKey) ?? 0;
   static Future<void> setCoins(int value) async {
     await _prefs?.setInt(_coinsKey, value);
+    _changeController.add(null);
+  }
+
+  static int get gems => _prefs?.getInt(_gemsKey) ?? 0;
+  static Future<void> setGems(int value) async {
+    await _prefs?.setInt(_gemsKey, value);
     _changeController.add(null);
   }
 
@@ -84,6 +91,7 @@ class PlayerPrefs {
     await _prefs?.remove(_winsKey);
     await _prefs?.remove(_winStreakKey);
     await _prefs?.remove(_coinsKey);
+    await _prefs?.remove(_gemsKey);
     _changeController.add(null);
   }
 
