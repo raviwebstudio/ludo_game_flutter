@@ -56,12 +56,21 @@ class GameRepositoryImpl implements GameRepository {
   @override
   List<Player> initializePlayers(int playerCount, {List<Color>? customColors}) {
     final colors = customColors ?? playerColors;
+
+    String getPlayerName(int listIndex) {
+      if (listIndex == 0) {
+        final savedName = PlayerPrefs.playerName(0);
+        return savedName.trim().isEmpty ? 'Player 1' : savedName;
+      }
+      return 'Player ${listIndex + 1}';
+    }
+
     if (playerCount == 2) {
       return [
         Player(
           id: 0,
           color: colors[0],
-          name: PlayerPrefs.playerName(0),
+          name: getPlayerName(0),
           tokens: List.generate(
             4,
             (tokenIndex) => Token(
@@ -74,7 +83,7 @@ class GameRepositoryImpl implements GameRepository {
         Player(
           id: 2,
           color: colors[1],
-          name: PlayerPrefs.playerName(1),
+          name: getPlayerName(1),
           tokens: List.generate(
             4,
             (tokenIndex) => Token(
@@ -91,7 +100,7 @@ class GameRepositoryImpl implements GameRepository {
         (index) => Player(
           id: index,
           color: colors[index],
-          name: PlayerPrefs.playerName(index),
+          name: getPlayerName(index),
           tokens: List.generate(
             4,
             (tokenIndex) => Token(

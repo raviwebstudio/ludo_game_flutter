@@ -1,15 +1,56 @@
 import 'dart:math';
+import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/constants/colors.dart';
 import '../../../core/constants/dimensions.dart';
 import '../../../core/constants/text_styles.dart';
+import '../../../core/services/player_prefs.dart';
 import '../widgets/game_mode_card.dart';
+import '../../../shared/widgets/glass_morphism.dart';
 
 /// The main lobby screen — dark navy background, diamond board preview,
 /// "PLAY NOW" button, and mode cards.
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  String _name = 'Player 1';
+  String? _avatarPath;
+  int _coins = 25450;
+  StreamSubscription<void>? _changesSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPrefs();
+    _changesSubscription = PlayerPrefs.changes.listen((_) => _loadPrefs());
+  }
+
+  @override
+  void dispose() {
+    _changesSubscription?.cancel();
+    super.dispose();
+  }
+
+  void _loadPrefs() {
+    if (!mounted) return;
+    setState(() {
+      _name = PlayerPrefs.playerName(0);
+      _avatarPath = PlayerPrefs.playerAvatarPath(0);
+      _coins = PlayerPrefs.coins;
+    });
+  }
+
+  String _formatCoins(int value) {
+    final reg = RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))');
+    return value.toString().replaceAllMapped(reg, (Match m) => '${m[1]},');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -87,14 +128,15 @@ class HomeScreen extends StatelessWidget {
                 const SizedBox(height: LudoDimensions.spacing12),
 
                 GameModeCard(
-                  icon: Icons.settings,
-                  title: 'SETTINGS',
-                  subtitle: 'Customize Your Experience',
+                  icon: Icons.public,
+                  title: 'ONLINE MULTIPLAYER',
+                  subtitle: 'Play Online With Friends',
+                  badge: 'COMING SOON',
                   gradientColors: [
                     LudoColors.darkNavyLight,
                     LudoColors.darkNavyLight.withValues(alpha: 0.8),
                   ],
-                  onTap: () => Navigator.pushNamed(context, '/settings'),
+                  onTap: () => _showComingSoonDialog(context),
                 ).animate().fadeIn(delay: 700.ms, duration: 400.ms)
                     .slideX(begin: -0.1, duration: 400.ms),
 
@@ -113,21 +155,75 @@ class HomeScreen extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        // Profile avatar
+        // Profile Avatar + Name
         GestureDetector(
           onTap: () => Navigator.pushNamed(context, '/profile'),
-          child: Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: LudoColors.mintGreen.withValues(alpha: 0.5),
-                width: 2,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: LudoColors.mintGreen.withValues(alpha: 0.5),
+                    width: 2,
+                  ),
+                  color: LudoColors.darkNavyLight,
+                ),
+                child: _avatarPath == null
+                    ? const Icon(Icons.person, color: LudoColors.textMedium, size: 22)
+                    : ClipOval(
+                        child: _avatarPath!.startsWith('assets/')
+                            ? Image.asset(
+                                _avatarPath!,
+                                fit: BoxFit.cover,
+                                width: 44,
+                                height: 44,
+                                errorBuilder: (context, error, stackTrace) => const Icon(
+                                  Icons.person,
+                                  color: LudoColors.textMedium,
+                                  size: 22,
+                                ),
+                              )
+                            : Image.file(
+                                File(_avatarPath!),
+                                fit: BoxFit.cover,
+                                width: 44,
+                                height: 44,
+                                errorBuilder: (context, error, stackTrace) => const Icon(
+                                  Icons.person,
+                                  color: LudoColors.textMedium,
+                                  size: 22,
+                                ),
+                              ),
+                      ),
               ),
-              color: LudoColors.darkNavyLight,
-            ),
-            child: const Icon(Icons.person, color: LudoColors.textMedium, size: 24),
+              const SizedBox(width: 10),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'WELCOME',
+                    style: LudoTextStyles.labelSmall.copyWith(
+                      color: LudoColors.textMedium,
+                      fontSize: 9,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1.0,
+                    ),
+                  ),
+                  Text(
+                    _name.toUpperCase(),
+                    style: LudoTextStyles.labelBold.copyWith(
+                      color: Colors.white,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
 
@@ -151,7 +247,7 @@ class HomeScreen extends StatelessWidget {
                       color: LudoColors.gold, size: 18),
                   const SizedBox(width: 6),
                   Text(
-                    '1,250 G',
+                    '${_formatCoins(_coins)} G',
                     style: LudoTextStyles.labelBold.copyWith(
                       color: LudoColors.gold,
                     ),
@@ -185,19 +281,43 @@ class HomeScreen extends StatelessWidget {
           ],
         ),
 
-        // Notification bell
-        Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: LudoColors.darkNavyLight,
-            border: Border.all(
-              color: Colors.black.withValues(alpha: 0.06),
+        // Action Buttons: Settings Gear + Notification Bell
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Settings Gear
+            GestureDetector(
+              onTap: () => Navigator.pushNamed(context, '/settings'),
+              child: Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: LudoColors.darkNavyLight,
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.05),
+                  ),
+                ),
+                child: const Icon(Icons.settings,
+                    color: LudoColors.textLight, size: 18),
+              ),
             ),
-          ),
-          child: const Icon(Icons.notifications_none,
-              color: LudoColors.textMedium, size: 20),
+            const SizedBox(width: 8),
+            // Notification bell
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: LudoColors.darkNavyLight,
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.05),
+                ),
+              ),
+              child: const Icon(Icons.notifications_none,
+                  color: LudoColors.textMedium, size: 18),
+            ),
+          ],
         ),
       ],
     );
@@ -367,4 +487,65 @@ class HomeScreen extends StatelessWidget {
       ),
     );
   }
+
+  void _showComingSoonDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: GlassMorphism(
+            opacity: 0.15,
+            blur: 16,
+            borderRadius: BorderRadius.circular(LudoDimensions.radius24),
+            padding: const EdgeInsets.all(LudoDimensions.spacing24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.public,
+                  color: LudoColors.cyan,
+                  size: 48,
+                ).animate().scale(duration: 400.ms),
+                const SizedBox(height: 16),
+                Text(
+                  'Coming Soon',
+                  style: LudoTextStyles.headlineSmall.copyWith(
+                    color: LudoColors.textLight,
+                    fontSize: 20,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Online multiplayer is coming in the next update. Stay tuned!',
+                  textAlign: TextAlign.center,
+                  style: LudoTextStyles.bodyMedium.copyWith(color: LudoColors.textMedium),
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: LudoColors.purple,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(LudoDimensions.radius12),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    onPressed: () => Navigator.pop(context),
+                    child: Text(
+                      'OK',
+                      style: LudoTextStyles.labelBold.copyWith(fontSize: 14),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 }
+

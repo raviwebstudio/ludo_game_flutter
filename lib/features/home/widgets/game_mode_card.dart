@@ -10,6 +10,7 @@ class GameModeCard extends StatefulWidget {
   final String subtitle;
   final VoidCallback onTap;
   final List<Color>? gradientColors;
+  final String? badge;
 
   const GameModeCard({
     required this.icon,
@@ -17,6 +18,7 @@ class GameModeCard extends StatefulWidget {
     required this.subtitle,
     required this.onTap,
     this.gradientColors,
+    this.badge,
     super.key,
   });
 
@@ -95,10 +97,39 @@ class _GameModeCardState extends State<GameModeCard>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      widget.title,
-                      style: LudoTextStyles.headlineXS
-                          .copyWith(color: Colors.white),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          widget.title,
+                          style: LudoTextStyles.headlineXS
+                              .copyWith(color: Colors.white),
+                        ),
+                        if (widget.badge != null)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFC0392B),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.3),
+                                width: 1,
+                              ),
+                            ),
+                            child: Text(
+                              widget.badge!,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 9,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.8,
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                     const SizedBox(height: 4),
                     Text(

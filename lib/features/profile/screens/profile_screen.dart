@@ -7,7 +7,6 @@ import 'package:ludo_game/core/constants/text_styles.dart';
 import 'package:ludo_game/shared/widgets/glass_morphism.dart';
 import 'package:ludo_game/shared/widgets/gradient_button.dart';
 import 'package:ludo_game/core/services/player_prefs.dart';
-import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 
 /// Premium Profile and Player Statistics Screen.
@@ -26,6 +25,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
   int _wins = 0;
   int _winStreak = 0;
   int _coins = 25450;
+
+  final List<String> _presets = [
+    'assets/avatars/lion.png',
+    'assets/avatars/tiger.png',
+    'assets/avatars/panda.png',
+    'assets/avatars/eagle.png',
+    'assets/avatars/owl.png',
+    'assets/avatars/peacock.png',
+    'assets/avatars/penguin.png',
+    'assets/avatars/fox.png',
+    'assets/avatars/bear.png',
+    'assets/avatars/rabbit.png',
+    'assets/avatars/wolf.png',
+    'assets/avatars/king.png',
+    'assets/avatars/queen.png',
+    'assets/avatars/boy.png',
+    'assets/avatars/girl.png',
+    'assets/avatars/crown.png',
+  ];
 
   StreamSubscription<void>? _changesSubscription;
 
@@ -54,13 +72,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
   }
 
-  Future<void> _pickAvatar() async {
-    final picker = ImagePicker();
-    final result = await picker.pickImage(source: ImageSource.gallery);
-    if (result != null) {
-      await PlayerPrefs.setPlayerAvatarPath(0, result.path);
-    }
-  }
+
 
   Future<void> _editName() async {
     final controller = TextEditingController(text: _name);
@@ -190,68 +202,65 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Center(
                     child: Column(
                       children: [
-                        GestureDetector(
-                          onTap: _pickAvatar,
-                          child: Stack(
-                            alignment: Alignment.bottomRight,
-                            children: [
-                              Container(
-                                width: 120,
-                                height: 120,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  gradient: const LinearGradient(
-                                    colors: [LudoColors.purple, LudoColors.softBlue],
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: LudoColors.purple.withValues(alpha: 0.4),
-                                      blurRadius: 24,
-                                      spreadRadius: 2,
-                                    ),
-                                  ],
-                                ),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(4.0),
-                                  child: Container(
-                                    decoration: const BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: LudoColors.darkNavyDark,
-                                    ),
-                                    child: Center(
-                                      child: _avatarPath == null
-                                          ? Icon(
-                                              Icons.person,
-                                              color: LudoColors.textLight,
-                                              size: 64,
-                                            )
-                                          : ClipOval(
-                                              child: Image.file(
+                        Container(
+                          width: 120,
+                          height: 120,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: const LinearGradient(
+                              colors: [LudoColors.purple, LudoColors.softBlue],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: LudoColors.purple.withValues(alpha: 0.4),
+                                blurRadius: 24,
+                                spreadRadius: 2,
+                              ),
+                            ],
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(4.0),
+                            child: Container(
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: LudoColors.darkNavyDark,
+                              ),
+                              child: Center(
+                                child: _avatarPath == null
+                                    ? const Icon(
+                                        Icons.person,
+                                        color: LudoColors.textLight,
+                                        size: 64,
+                                      )
+                                    : ClipOval(
+                                        child: _avatarPath!.startsWith('assets/')
+                                            ? Image.asset(
+                                                _avatarPath!,
+                                                fit: BoxFit.cover,
+                                                width: 120,
+                                                height: 120,
+                                                errorBuilder: (context, error, stackTrace) => const Icon(
+                                                  Icons.person,
+                                                  color: LudoColors.textLight,
+                                                  size: 64,
+                                                ),
+                                              )
+                                            : Image.file(
                                                 File(_avatarPath!),
                                                 fit: BoxFit.cover,
                                                 width: 120,
                                                 height: 120,
+                                                errorBuilder: (context, error, stackTrace) => const Icon(
+                                                  Icons.person,
+                                                  color: LudoColors.textLight,
+                                                  size: 64,
+                                                ),
                                               ),
-                                            ),
-                                    ),
-                                  ),
-                                ),
+                                      ),
                               ),
-                              Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: const BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: LudoColors.mintGreen,
-                                ),
-                                child: const Icon(
-                                  Icons.edit,
-                                  color: Colors.white,
-                                  size: 16,
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
                         ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack),
                         const SizedBox(height: 16),
@@ -366,20 +375,119 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  GridView.count(
-                    crossAxisCount: 2,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
-                    childAspectRatio: 1.5,
-                    children: [
-                      _buildStatCard('Total Games', '$_totalGames', Icons.sports_esports, LudoColors.softBlue, onTap: () => _editStat('Total Games', _totalGames, PlayerPrefs.setTotalGames)),
-                      _buildStatCard('Wins', '$_wins', Icons.emoji_events, LudoColors.gold, onTap: () => _editStat('Wins', _wins, PlayerPrefs.setWins)),
-                      _buildStatCard('Win Rate', '${PlayerPrefs.winRate.toStringAsFixed(1)}%', Icons.percent, LudoColors.brightBlue),
-                      _buildStatCard('Win Streak', '$_winStreak', Icons.local_fire_department, LudoColors.redToken, onTap: () => _editStat('Win Streak', _winStreak, PlayerPrefs.setWinStreak)),
-                    ],
+                  GlassMorphism(
+                    opacity: 0.08,
+                    blur: 12,
+                    borderRadius: BorderRadius.circular(LudoDimensions.radius16),
+                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Expanded(
+                          child: _buildHorizontalStatItem(
+                            label: 'Games',
+                            value: '$_totalGames',
+                            onTap: () => _editStat('Total Games', _totalGames, PlayerPrefs.setTotalGames),
+                          ),
+                        ),
+                        _buildStatDivider(),
+                        Expanded(
+                          child: _buildHorizontalStatItem(
+                            label: 'Wins',
+                            value: '$_wins',
+                            onTap: () => _editStat('Wins', _wins, PlayerPrefs.setWins),
+                          ),
+                        ),
+                        _buildStatDivider(),
+                        Expanded(
+                          child: _buildHorizontalStatItem(
+                            label: 'Win Rate',
+                            value: '${PlayerPrefs.winRate.toStringAsFixed(1)}%',
+                          ),
+                        ),
+                        _buildStatDivider(),
+                        Expanded(
+                          child: _buildHorizontalStatItem(
+                            label: 'Streak',
+                            value: '$_winStreak',
+                            onTap: () => _editStat('Win Streak', _winStreak, PlayerPrefs.setWinStreak),
+                          ),
+                        ),
+                      ],
+                    ),
                   ).animate().fadeIn(delay: 200.ms, duration: 400.ms),
+
+                  const SizedBox(height: LudoDimensions.spacing24),
+
+                  // Preset Avatar Section
+                  Text(
+                    'SELECT PRESET AVATAR',
+                    style: LudoTextStyles.labelSmall.copyWith(
+                      color: LudoColors.mintGreen,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  GlassMorphism(
+                    opacity: 0.08,
+                    blur: 12,
+                    borderRadius: BorderRadius.circular(LudoDimensions.radius16),
+                    padding: const EdgeInsets.all(16),
+                    child: GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 4,
+                        crossAxisSpacing: 12,
+                        mainAxisSpacing: 12,
+                      ),
+                      itemCount: _presets.length,
+                      itemBuilder: (context, index) {
+                        final avatar = _presets[index];
+                        final isSelected = _avatarPath == avatar;
+                        return GestureDetector(
+                          onTap: () async {
+                            await PlayerPrefs.setPlayerAvatarPath(0, avatar);
+                            setState(() {
+                              _avatarPath = avatar;
+                            });
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: isSelected
+                                    ? LudoColors.mintGreen
+                                    : Colors.grey.withValues(alpha: 0.4),
+                                width: isSelected ? 3.0 : 1.5,
+                              ),
+                              boxShadow: isSelected
+                                  ? [
+                                      BoxShadow(
+                                        color: LudoColors.mintGreen.withValues(alpha: 0.35),
+                                        blurRadius: 8,
+                                        spreadRadius: 1,
+                                      )
+                                    ]
+                                  : null,
+                            ),
+                            padding: const EdgeInsets.all(3),
+                            child: ClipOval(
+                              child: Image.asset(
+                                avatar,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) => const Icon(
+                                  Icons.person,
+                                  color: LudoColors.textLight,
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ).animate().fadeIn(delay: 250.ms, duration: 400.ms),
 
                   const SizedBox(height: LudoDimensions.spacing32),
 
@@ -399,35 +507,50 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildStatCard(String label, String value, IconData icon, Color color, {VoidCallback? onTap}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: GlassMorphism(
-        opacity: 0.06,
-        blur: 12,
-        borderRadius: BorderRadius.circular(LudoDimensions.radius16),
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  label,
-                  style: LudoTextStyles.labelSmall.copyWith(color: LudoColors.textMedium),
-                ),
-                Icon(icon, color: color, size: 20),
-              ],
-            ),
-            Text(
-              value,
-              style: LudoTextStyles.displayMedium.copyWith(fontSize: 24),
-            ),
-          ],
+  Widget _buildHorizontalStatItem({
+    required String label,
+    required String value,
+    VoidCallback? onTap,
+  }) {
+    final content = Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          label.toUpperCase(),
+          style: LudoTextStyles.labelSmall.copyWith(
+            color: LudoColors.cyan,
+            fontWeight: FontWeight.w800,
+            fontSize: 10,
+            letterSpacing: 0.8,
+          ),
         ),
-      ),
+        const SizedBox(height: 6),
+        Text(
+          value,
+          style: LudoTextStyles.headlineSmall.copyWith(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
+        ),
+      ],
+    );
+
+    if (onTap != null) {
+      return GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: content,
+      );
+    }
+    return content;
+  }
+
+  Widget _buildStatDivider() {
+    return Container(
+      width: 1,
+      height: 36,
+      color: Colors.white.withValues(alpha: 0.1),
     );
   }
 }

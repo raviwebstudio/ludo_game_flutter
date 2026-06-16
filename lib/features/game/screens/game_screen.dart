@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -29,6 +30,7 @@ class GameScreen extends StatelessWidget {
         if (didPop) return;
         final shouldPop = await showDialog<bool>(
           context: context,
+          barrierColor: Colors.black.withValues(alpha: 0.65),
           builder: (context) => _buildExitDialog(context),
         );
         if (shouldPop ?? false) {
@@ -170,6 +172,7 @@ class GameScreen extends StatelessWidget {
           onPressed: () async {
             final shouldPop = await showDialog<bool>(
               context: context,
+              barrierColor: Colors.black.withValues(alpha: 0.65),
               builder: (context) => _buildExitDialog(context),
             );
             if (shouldPop == true) {
@@ -238,58 +241,102 @@ class GameScreen extends StatelessWidget {
   Widget _buildExitDialog(BuildContext context) {
     return Dialog(
       backgroundColor: Colors.transparent,
-      child: GlassMorphism(
-        opacity: 0.15,
-        blur: 16,
+      child: ClipRRect(
         borderRadius: BorderRadius.circular(LudoDimensions.radius24),
-        padding: const EdgeInsets.all(LudoDimensions.spacing24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Icons.warning_amber_rounded,
-              color: LudoColors.redToken,
-              size: 48,
-            ).animate().shake(duration: 500.ms),
-            const SizedBox(height: 16),
-            Text(
-              'Quit Game?',
-              style: LudoTextStyles.headlineSmall.copyWith(color: LudoColors.textLight),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+          child: Container(
+            padding: const EdgeInsets.all(LudoDimensions.spacing24),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(LudoDimensions.radius24),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.2),
+                width: 1.5,
+              ),
             ),
-            const SizedBox(height: 12),
-            Text(
-              'Are you sure you want to end this game? Your progress will be lost.',
-              textAlign: TextAlign.center,
-              style: LudoTextStyles.bodyMedium.copyWith(color: LudoColors.textMedium),
-            ),
-            const SizedBox(height: 24),
-            Row(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Expanded(
-                  child: TextButton(
-                    onPressed: () => Navigator.pop(context, false),
-                    child: Text(
-                      'Cancel',
-                      style: LudoTextStyles.labelSmall.copyWith(
-                        color: LudoColors.textMedium,
-                        fontSize: 14,
-                      ),
-                    ),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: LudoColors.redToken.withValues(alpha: 0.12),
+                  ),
+                  child: const Icon(
+                    Icons.warning_amber_rounded,
+                    color: LudoColors.redToken,
+                    size: 40,
+                  ),
+                ).animate().shake(duration: 500.ms),
+                const SizedBox(height: 16),
+                Text(
+                  'Quit Game?',
+                  style: LudoTextStyles.headlineSmall.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: GradientButton(
-                    label: 'Quit',
-                    onPressed: () {
-                      Navigator.pop(context, true);
-                    },
-                    colors: const [LudoColors.redToken, Color(0xFFC0392B)],
+                const SizedBox(height: 12),
+                Text(
+                  'Are you sure you want to end this game? Your progress will be lost.',
+                  textAlign: TextAlign.center,
+                  style: LudoTextStyles.bodyMedium.copyWith(
+                    color: Colors.white.withValues(alpha: 0.9),
                   ),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          side: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(LudoDimensions.radius16),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        child: Text(
+                          'Cancel',
+                          style: LudoTextStyles.labelBold.copyWith(
+                            color: Colors.white,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.pop(context, true),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: LudoColors.redToken,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(LudoDimensions.radius16),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          elevation: 0,
+                          shadowColor: LudoColors.redToken.withValues(alpha: 0.4),
+                        ),
+                        child: Text(
+                          'Quit',
+                          style: LudoTextStyles.labelBold.copyWith(
+                            color: Colors.white,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-          ],
+          ),
         ),
       ),
     );

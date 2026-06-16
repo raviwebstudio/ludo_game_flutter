@@ -188,7 +188,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       children: [
                         _buildInfoTile('Version', '1.0.0 (Elite Edition)'),
                         const Divider(color: Colors.black12),
-                        _buildInfoTile('Developer', 'Antigravity AI'),
+                        _buildInfoTile('Developer', 'Crowcent'),
                         const Divider(color: Colors.black12),
                         _buildInfoTile('Engine', 'Flutter 3.x'),
                       ],
