@@ -5,7 +5,6 @@ import 'package:ludo_game/core/constants/dimensions.dart';
 import 'package:ludo_game/core/constants/text_styles.dart';
 import 'package:ludo_game/core/services/sound_manager.dart';
 import 'package:ludo_game/core/services/player_prefs.dart';
-import 'package:ludo_game/shared/widgets/glass_morphism.dart';
 
 /// Premium Settings screen to manage sound, haptic feedback and custom themes.
 class SettingsScreen extends StatefulWidget {
@@ -66,13 +65,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [LudoColors.darkNavyDark, LudoColors.darkNavy],
-          ),
-        ),
+        color: const Color(0xFF0D1B2A),
         child: SafeArea(
           child: SingleChildScrollView(
             child: Padding(
@@ -85,12 +78,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     children: [
                       IconButton(
                         onPressed: () => Navigator.pop(context),
-                        icon: const Icon(Icons.arrow_back_ios, color: LudoColors.textLight),
+                        icon: const Icon(Icons.arrow_back_ios, color: Color(0xFFF0F4FF)),
                       ),
                       const SizedBox(width: 8),
                       Text(
                         'SETTINGS',
-                        style: LudoTextStyles.displayMedium.copyWith(fontSize: 20),
+                        style: LudoTextStyles.displayMedium.copyWith(fontSize: 20, color: const Color(0xFFF0F4FF)),
                       ),
                     ],
                   ),
@@ -99,10 +92,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   // Sound & Haptics Section
                   _buildSectionHeader('SOUND & HAPTICS'),
                   const SizedBox(height: 8),
-                  GlassMorphism(
-                    opacity: 0.08,
-                    blur: 12,
-                    borderRadius: BorderRadius.circular(LudoDimensions.radius16),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF162236),
+                      borderRadius: BorderRadius.circular(LudoDimensions.radius16),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.07),
+                        width: 1,
+                      ),
+                    ),
                     padding: const EdgeInsets.all(16),
                     child: Column(
                       children: [
@@ -113,20 +111,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           onChanged: _toggleSound,
                         ),
                         if (_soundEnabled) ...[
-                          const Divider(color: Colors.black12),
+                          Divider(color: Colors.white.withValues(alpha: 0.07)),
                           Padding(
                             padding: const EdgeInsets.symmetric(vertical: 8.0),
                             child: Row(
                               children: [
-                                const Icon(Icons.volume_mute, color: LudoColors.textMedium, size: 20),
+                                const Icon(Icons.volume_mute, color: Color(0xFF8BA3C1), size: 20),
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: SliderTheme(
                                     data: SliderThemeData(
-                                      activeTrackColor: LudoColors.brightBlue,
-                                      inactiveTrackColor: Colors.black.withValues(alpha: 0.08),
-                                      thumbColor: LudoColors.brightBlue,
-                                      overlayColor: LudoColors.brightBlue.withValues(alpha: 0.2),
+                                      activeTrackColor: const Color(0xFF2979FF),
+                                      inactiveTrackColor: const Color(0xFF1E3A5A),
+                                      thumbColor: const Color(0xFF2979FF),
+                                      overlayColor: const Color(0xFF2979FF).withValues(alpha: 0.2),
                                       trackHeight: 4,
                                     ),
                                     child: Slider(
@@ -135,12 +133,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     ),
                                   ),
                                 ),
-                                const Icon(Icons.volume_up, color: LudoColors.brightBlue, size: 20),
+                                const Icon(Icons.volume_up, color: Color(0xFF2979FF), size: 20),
                               ],
                             ),
                           ),
                         ],
-                        const Divider(color: Colors.black12),
+                        Divider(color: Colors.white.withValues(alpha: 0.07)),
                         _buildToggleTile(
                           icon: Icons.vibration,
                           title: 'Haptic Feedback',
@@ -156,10 +154,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   // Game Settings Section
                   _buildSectionHeader('DISPLAY & THEME'),
                   const SizedBox(height: 8),
-                  GlassMorphism(
-                    opacity: 0.08,
-                    blur: 12,
-                    borderRadius: BorderRadius.circular(LudoDimensions.radius16),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF162236),
+                      borderRadius: BorderRadius.circular(LudoDimensions.radius16),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.07),
+                        width: 1,
+                      ),
+                    ),
                     padding: const EdgeInsets.all(16),
                     child: Column(
                       children: [
@@ -179,17 +182,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   // About Section
                   _buildSectionHeader('ABOUT'),
                   const SizedBox(height: 8),
-                  GlassMorphism(
-                    opacity: 0.08,
-                    blur: 12,
-                    borderRadius: BorderRadius.circular(LudoDimensions.radius16),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF162236),
+                      borderRadius: BorderRadius.circular(LudoDimensions.radius16),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.07),
+                        width: 1,
+                      ),
+                    ),
                     padding: const EdgeInsets.all(16),
                     child: Column(
                       children: [
                         _buildInfoTile('Version', '1.0.0 (Elite Edition)'),
-                        const Divider(color: Colors.black12),
+                        Divider(color: Colors.white.withValues(alpha: 0.07)),
                         _buildInfoTile('Developer', 'Crowcent'),
-                        const Divider(color: Colors.black12),
+                        Divider(color: Colors.white.withValues(alpha: 0.07)),
                         _buildInfoTile('Engine', 'Flutter 3.x'),
                       ],
                     ),
@@ -209,7 +217,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: Text(
         title,
         style: LudoTextStyles.labelSmall.copyWith(
-          color: LudoColors.mintGreen,
+          color: const Color(0xFF00E5A0),
           fontWeight: FontWeight.w800,
           letterSpacing: 1.2,
         ),
@@ -227,13 +235,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
         children: [
-          Icon(icon, color: LudoColors.textLight, size: 24),
+          Icon(icon, color: const Color(0xFFF0F4FF), size: 24),
           const SizedBox(width: 16),
           Expanded(
             child: Text(
               title,
               style: LudoTextStyles.bodyMedium.copyWith(
-                color: LudoColors.textLight,
+                color: const Color(0xFFF0F4FF),
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -241,8 +249,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeThumbColor: LudoColors.mintGreen,
-            activeTrackColor: LudoColors.mintGreen.withValues(alpha: 0.3),
+            activeThumbColor: const Color(0xFF00E5A0),
+            activeTrackColor: const Color(0xFF00E5A0).withValues(alpha: 0.3),
             inactiveThumbColor: LudoColors.textMedium,
             inactiveTrackColor: Colors.black.withValues(alpha: 0.08),
           ),
@@ -262,28 +270,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
         children: [
-          Icon(icon, color: LudoColors.textLight, size: 24),
+          Icon(icon, color: const Color(0xFFF0F4FF), size: 24),
           const SizedBox(width: 16),
           Expanded(
             child: Text(
               title,
               style: LudoTextStyles.bodyMedium.copyWith(
-                color: LudoColors.textLight,
+                color: const Color(0xFFF0F4FF),
                 fontWeight: FontWeight.w600,
               ),
             ),
           ),
           DropdownButton<String>(
             value: value,
-            dropdownColor: LudoColors.darkNavyLight,
+            dropdownColor: const Color(0xFF162236),
             underline: const SizedBox(),
-            icon: const Icon(Icons.arrow_drop_down, color: LudoColors.mintGreen),
+            icon: const Icon(Icons.arrow_drop_down, color: Color(0xFF00E5A0)),
             items: options.map((opt) {
               return DropdownMenuItem<String>(
                 value: opt,
                 child: Text(
                   opt,
-                  style: LudoTextStyles.bodyMedium.copyWith(color: LudoColors.textLight),
+                  style: LudoTextStyles.bodyMedium.copyWith(color: const Color(0xFFF0F4FF)),
                 ),
               );
             }).toList(),
@@ -303,14 +311,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Text(
             label,
             style: LudoTextStyles.bodyMedium.copyWith(
-              color: LudoColors.textMedium,
+              color: const Color(0xFFF0F4FF).withValues(alpha: 0.7),
               fontWeight: FontWeight.w500,
             ),
           ),
           Text(
             value,
             style: LudoTextStyles.bodyMedium.copyWith(
-              color: LudoColors.textLight,
+              color: const Color(0xFFF0F4FF),
               fontWeight: FontWeight.bold,
             ),
           ),

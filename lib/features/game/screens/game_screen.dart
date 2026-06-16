@@ -30,7 +30,7 @@ class GameScreen extends StatelessWidget {
         if (didPop) return;
         final shouldPop = await showDialog<bool>(
           context: context,
-          barrierColor: Colors.black.withValues(alpha: 0.65),
+          barrierColor: Colors.black.withValues(alpha: 0.5),
           builder: (context) => _buildExitDialog(context),
         );
         if (shouldPop ?? false) {
@@ -172,7 +172,7 @@ class GameScreen extends StatelessWidget {
           onPressed: () async {
             final shouldPop = await showDialog<bool>(
               context: context,
-              barrierColor: Colors.black.withValues(alpha: 0.65),
+              barrierColor: Colors.black.withValues(alpha: 0.5),
               builder: (context) => _buildExitDialog(context),
             );
             if (shouldPop == true) {
@@ -242,16 +242,16 @@ class GameScreen extends StatelessWidget {
     return Dialog(
       backgroundColor: Colors.transparent,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(LudoDimensions.radius24),
+        borderRadius: BorderRadius.circular(20),
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
           child: Container(
             padding: const EdgeInsets.all(LudoDimensions.spacing24),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(LudoDimensions.radius24),
+              color: const Color(0xFF162236),
+              borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: Colors.white.withValues(alpha: 0.2),
+                color: Colors.white.withValues(alpha: 0.07),
                 width: 1.5,
               ),
             ),
@@ -262,11 +262,11 @@ class GameScreen extends StatelessWidget {
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: LudoColors.redToken.withValues(alpha: 0.12),
+                    color: const Color(0xFFE74C3C).withValues(alpha: 0.12),
                   ),
                   child: const Icon(
                     Icons.warning_amber_rounded,
-                    color: LudoColors.redToken,
+                    color: Color(0xFFE74C3C),
                     size: 40,
                   ),
                 ).animate().shake(duration: 500.ms),
@@ -274,7 +274,7 @@ class GameScreen extends StatelessWidget {
                 Text(
                   'Quit Game?',
                   style: LudoTextStyles.headlineSmall.copyWith(
-                    color: Colors.white,
+                    color: const Color(0xFFF0F4FF),
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -283,21 +283,17 @@ class GameScreen extends StatelessWidget {
                   'Are you sure you want to end this game? Your progress will be lost.',
                   textAlign: TextAlign.center,
                   style: LudoTextStyles.bodyMedium.copyWith(
-                    color: Colors.white.withValues(alpha: 0.9),
+                    color: const Color(0xFF8BA3C1),
                   ),
                 ),
                 const SizedBox(height: 24),
                 Row(
                   children: [
                     Expanded(
-                      child: OutlinedButton(
+                      child: TextButton(
                         onPressed: () => Navigator.pop(context, false),
-                        style: OutlinedButton.styleFrom(
+                        style: TextButton.styleFrom(
                           foregroundColor: Colors.white,
-                          side: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(LudoDimensions.radius16),
-                          ),
                           padding: const EdgeInsets.symmetric(vertical: 14),
                         ),
                         child: Text(
@@ -314,14 +310,13 @@ class GameScreen extends StatelessWidget {
                       child: ElevatedButton(
                         onPressed: () => Navigator.pop(context, true),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: LudoColors.redToken,
+                          backgroundColor: const Color(0xFFE74C3C),
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(LudoDimensions.radius16),
+                            borderRadius: BorderRadius.circular(12),
                           ),
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           elevation: 0,
-                          shadowColor: LudoColors.redToken.withValues(alpha: 0.4),
                         ),
                         child: Text(
                           'Quit',

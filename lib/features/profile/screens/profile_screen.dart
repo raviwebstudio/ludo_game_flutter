@@ -4,7 +4,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:ludo_game/core/constants/colors.dart';
 import 'package:ludo_game/core/constants/dimensions.dart';
 import 'package:ludo_game/core/constants/text_styles.dart';
-import 'package:ludo_game/shared/widgets/glass_morphism.dart';
 import 'package:ludo_game/shared/widgets/gradient_button.dart';
 import 'package:ludo_game/core/services/player_prefs.dart';
 import 'dart:io';
@@ -168,13 +167,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [LudoColors.darkNavyDark, LudoColors.darkNavy],
-          ),
-        ),
+        color: const Color(0xFF0D1B2A),
         child: SafeArea(
           child: SingleChildScrollView(
             child: Padding(
@@ -299,16 +292,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Text(
                     'LEVEL PROGRESS',
                     style: LudoTextStyles.labelSmall.copyWith(
-                      color: LudoColors.mintGreen,
+                      color: const Color(0xFF00E5A0),
                       fontWeight: FontWeight.w800,
                       letterSpacing: 1.2,
                     ),
                   ),
                   const SizedBox(height: 8),
-                  GlassMorphism(
-                    opacity: 0.08,
-                    blur: 12,
-                    borderRadius: BorderRadius.circular(LudoDimensions.radius16),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF162236),
+                      borderRadius: BorderRadius.circular(LudoDimensions.radius16),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.07),
+                        width: 1,
+                      ),
+                    ),
                     padding: const EdgeInsets.all(16),
                     child: Column(
                       children: [
@@ -318,13 +316,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             Text(
                               'Level ${( (_xp / 1000).floor() + 1)}',
                               style: LudoTextStyles.labelSmall.copyWith(
-                                color: LudoColors.textLight,
+                                color: const Color(0xFFF0F4FF),
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                             Text(
                               '$_xp / ${((_xp / 1000).floor() + 1) * 1000} XP',
-                              style: LudoTextStyles.labelSmall.copyWith(color: LudoColors.textMedium),
+                              style: LudoTextStyles.labelSmall.copyWith(color: const Color(0xFF8BA3C1)),
                             ),
                           ],
                         ),
@@ -335,7 +333,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               height: 10,
                               width: double.infinity,
                               decoration: BoxDecoration(
-                                color: Colors.black.withValues(alpha: 0.08),
+                                color: const Color(0xFF1E3A5A),
                                 borderRadius: BorderRadius.circular(5),
                               ),
                             ),
@@ -345,12 +343,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 height: 10,
                                 decoration: BoxDecoration(
                                   gradient: const LinearGradient(
-                                    colors: [LudoColors.softBlue, LudoColors.brightBlue],
+                                    colors: [Color(0xFF2979FF), Color(0xFF00E5A0)],
                                   ),
                                   borderRadius: BorderRadius.circular(5),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: LudoColors.brightBlue.withValues(alpha: 0.3),
+                                      color: const Color(0xFF2979FF).withValues(alpha: 0.3),
                                       blurRadius: 8,
                                     ),
                                   ],
@@ -369,16 +367,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Text(
                     'STATISTICS',
                     style: LudoTextStyles.labelSmall.copyWith(
-                      color: LudoColors.mintGreen,
+                      color: const Color(0xFF00E5A0),
                       fontWeight: FontWeight.w800,
                       letterSpacing: 1.2,
                     ),
                   ),
                   const SizedBox(height: 8),
-                  GlassMorphism(
-                    opacity: 0.08,
-                    blur: 12,
-                    borderRadius: BorderRadius.circular(LudoDimensions.radius16),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF162236),
+                      borderRadius: BorderRadius.circular(LudoDimensions.radius16),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.07),
+                        width: 1,
+                      ),
+                    ),
                     padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -423,16 +426,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Text(
                     'SELECT PRESET AVATAR',
                     style: LudoTextStyles.labelSmall.copyWith(
-                      color: LudoColors.mintGreen,
+                      color: const Color(0xFF00E5A0),
                       fontWeight: FontWeight.w800,
                       letterSpacing: 1.2,
                     ),
                   ),
                   const SizedBox(height: 8),
-                  GlassMorphism(
-                    opacity: 0.08,
-                    blur: 12,
-                    borderRadius: BorderRadius.circular(LudoDimensions.radius16),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF162236),
+                      borderRadius: BorderRadius.circular(LudoDimensions.radius16),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.07),
+                        width: 1,
+                      ),
+                    ),
                     padding: const EdgeInsets.all(16),
                     child: GridView.builder(
                       shrinkWrap: true,
@@ -518,7 +526,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         Text(
           label.toUpperCase(),
           style: LudoTextStyles.labelSmall.copyWith(
-            color: LudoColors.cyan,
+            color: const Color(0xFF00E5A0),
             fontWeight: FontWeight.w800,
             fontSize: 10,
             letterSpacing: 0.8,
@@ -528,7 +536,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         Text(
           value,
           style: LudoTextStyles.headlineSmall.copyWith(
-            color: Colors.white,
+            color: const Color(0xFFF0F4FF),
             fontWeight: FontWeight.bold,
             fontSize: 20,
           ),
@@ -550,7 +558,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Container(
       width: 1,
       height: 36,
-      color: Colors.white.withValues(alpha: 0.1),
+      color: Colors.white.withValues(alpha: 0.07),
     );
   }
 }
