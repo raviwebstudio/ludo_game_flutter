@@ -15,12 +15,15 @@ class GameBoard extends StatefulWidget {
   final List<Token> validTokens;
   final CaptureEffect? captureEffect;
 
+  final void Function(Token)? onTokenTap;
+
   const GameBoard({
     super.key,
     required this.players,
     required this.currentPlayerIndex,
     required this.validTokens,
     required this.captureEffect,
+    this.onTokenTap,
   });
 
   @override
@@ -131,7 +134,11 @@ class _GameBoardState extends State<GameBoard> with TickerProviderStateMixin {
 
     if (tokensOnCell.isNotEmpty) {
       if (tokensOnCell.length == 1) {
-        context.read<GameBloc>().add(SelectToken(tokensOnCell.first));
+        if (widget.onTokenTap != null) {
+          widget.onTokenTap!(tokensOnCell.first);
+        } else {
+          context.read<GameBloc>().add(SelectToken(tokensOnCell.first));
+        }
       } else {
         // Find closest by offset center
         Token? closestToken;
@@ -161,7 +168,11 @@ class _GameBoardState extends State<GameBoard> with TickerProviderStateMixin {
           }
         }
         if (closestToken != null) {
-          context.read<GameBloc>().add(SelectToken(closestToken));
+          if (widget.onTokenTap != null) {
+            widget.onTokenTap!(closestToken);
+          } else {
+            context.read<GameBloc>().add(SelectToken(closestToken));
+          }
         }
       }
     }

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:ludo_game/injection.dart';
 import 'package:ludo_game/core/services/player_prefs.dart';
 import 'package:ludo_game/core/theme/app_theme.dart';
@@ -13,8 +14,21 @@ import 'package:ludo_game/features/profile/screens/edit_profile_screen.dart';
 import 'package:ludo_game/features/profile/screens/achievements_screen.dart';
 import 'package:ludo_game/features/settings/screens/settings_screen.dart';
 
+// New Firebase screens / gates
+import 'package:ludo_game/features/auth/widgets/auth_gate.dart';
+import 'package:ludo_game/features/auth/screens/login_screen.dart';
+import 'package:ludo_game/features/auth/screens/signup_screen.dart';
+import 'package:ludo_game/features/game/screens/online_lobby_screen.dart';
+import 'package:ludo_game/features/game/screens/online_waiting_room.dart';
+import 'package:ludo_game/features/game/screens/online_game_screen.dart';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  try {
+    await Firebase.initializeApp();
+  } catch (e) {
+    // Suppress or handle appropriately (e.g. for some test scenarios)
+  }
   await PlayerPrefs.init();
   setupDependencyInjection();
   runApp(const LudoGame());
@@ -55,6 +69,9 @@ class _LudoGameState extends State<LudoGame> {
       initialRoute: '/',
       routes: {
         '/': (context) => const SplashScreen(),
+        '/auth': (context) => const AuthGate(),
+        '/auth/login': (context) => const LoginScreen(),
+        '/auth/signup': (context) => const SignupScreen(),
         '/home': (context) => const HomeScreen(),
         '/game/mode': (context) => const ModeSelector(),
         '/game/players': (context) => const PlayerSelector(),
@@ -63,6 +80,9 @@ class _LudoGameState extends State<LudoGame> {
         '/profile/edit': (context) => const EditProfileScreen(),
         '/profile/achievements': (context) => const AchievementsScreen(),
         '/settings': (context) => const SettingsScreen(),
+        '/online/lobby': (context) => const OnlineLobbyScreen(),
+        '/online/waiting': (context) => const OnlineWaitingRoom(),
+        '/online/game': (context) => const OnlineGameScreen(),
       },
     );
   }
