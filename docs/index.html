@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy Policy — Ludo Elite</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+    :root {
+      --navy: #0D1B2A;
+      --navy-light: #162236;
+      --navy-card: #1A2C42;
+      --mint: #00E5A0;
+      --blue: #2979FF;
+      --gold: #FFD700;
+      --text-primary: #F0F4FF;
+      --text-secondary: #8BA3C1;
+      --border: rgba(255,255,255,0.07);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--navy);
+      color: var(--text-primary);
+      font-family: 'Inter', sans-serif;
+      font-size: 16px;
+      line-height: 1.7;
+    }
+
+    /* Header */
+    header {
+      background: linear-gradient(135deg, #0D1B2A 0%, #162236 60%, #1a1040 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 48px 24px 40px;
+      text-align: center;
+    }
+
+    .dice-icon {
+      font-size: 48px;
+      display: block;
+      margin-bottom: 16px;
+      filter: drop-shadow(0 0 16px #00E5A080);
+    }
+
+    header h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.5px;
+    }
+
+    header h1 span {
+      color: var(--mint);
+    }
+
+    .subtitle {
+      color: var(--text-secondary);
+      margin-top: 8px;
+      font-size: 0.95rem;
+    }
+
+    .badge {
+      display: inline-block;
+      margin-top: 16px;
+      background: rgba(0,229,160,0.1);
+      border: 1px solid rgba(0,229,160,0.25);
+      color: var(--mint);
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 4px 14px;
+      border-radius: 20px;
+      letter-spacing: 0.5px;
+    }
+
+    /* Main */
+    main {
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+    }
+
+    .effective-date {
+      background: var(--navy-card);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--mint);
+      border-radius: 10px;
+      padding: 16px 20px;
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+      margin-bottom: 40px;
+    }
+
+    .effective-date strong {
+      color: var(--mint);
+    }
+
+    section {
+      margin-bottom: 36px;
+    }
+
+    h2 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    h2 .num {
+      background: linear-gradient(135deg, var(--blue), var(--mint));
+      color: #000;
+      font-size: 0.72rem;
+      font-weight: 800;
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    p {
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+      font-size: 0.95rem;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin-bottom: 12px;
+    }
+
+    ul li {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      padding: 6px 0 6px 20px;
+      position: relative;
+    }
+
+    ul li::before {
+      content: '→';
+      position: absolute;
+      left: 0;
+      color: var(--mint);
+      font-size: 0.85rem;
+    }
+
+    .card {
+      background: var(--navy-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 24px;
+    }
+
+    .highlight-card {
+      background: rgba(0,229,160,0.05);
+      border: 1px solid rgba(0,229,160,0.15);
+      border-radius: 12px;
+      padding: 20px 24px;
+    }
+
+    .highlight-card p {
+      color: #a8d5c4;
+    }
+
+    a {
+      color: var(--mint);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    /* Contact */
+    .contact-box {
+      background: linear-gradient(135deg, rgba(41,121,255,0.1), rgba(0,229,160,0.08));
+      border: 1px solid rgba(41,121,255,0.2);
+      border-radius: 14px;
+      padding: 28px;
+      text-align: center;
+      margin-top: 48px;
+    }
+
+    .contact-box h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+
+    .contact-box p {
+      font-size: 0.9rem;
+    }
+
+    .email-link {
+      display: inline-block;
+      margin-top: 12px;
+      background: var(--mint);
+      color: #000;
+      font-weight: 700;
+      font-size: 0.88rem;
+      padding: 10px 24px;
+      border-radius: 8px;
+      text-decoration: none;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 32px 24px;
+      border-top: 1px solid var(--border);
+      color: var(--text-secondary);
+      font-size: 0.82rem;
+    }
+
+    footer span {
+      color: var(--mint);
+    }
+
+    @media (max-width: 600px) {
+      header h1 { font-size: 1.5rem; }
+      main { padding: 28px 16px 60px; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <span class="dice-icon">🎲</span>
+    <h1>Ludo <span>Elite</span></h1>
+    <p class="subtitle">Privacy Policy — by Crowcent</p>
+    <span class="badge">GDPR & Play Store Compliant</span>
+  </header>
+
+  <main>
+
+    <div class="effective-date">
+      <strong>Effective Date:</strong> June 12, 2026 &nbsp;·&nbsp;
+      <strong>App:</strong> Ludo Elite &nbsp;·&nbsp;
+      <strong>Developer:</strong> Crowcent &nbsp;·&nbsp;
+      <strong>Package:</strong> com.clikmagnet.ludo_game
+    </div>
+
+    <section>
+      <div class="highlight-card">
+        <p>Ludo Elite is a mobile board game application. We are committed to protecting your privacy. This Privacy Policy explains what information we collect, how we use it, and your rights regarding your data. By using Ludo Elite, you agree to this policy.</p>
+      </div>
+    </section>
+
+    <section>
+      <h2><span class="num">1</span> Information We Collect</h2>
+      <div class="card">
+        <p><strong style="color:var(--text-primary)">Information you provide:</strong></p>
+        <ul>
+          <li>Display name and email address (when creating an account)</li>
+          <li>Profile avatar (optional, chosen from device gallery)</li>
+          <li>Google account information (if you sign in with Google)</li>
+        </ul>
+        <p style="margin-top:12px"><strong style="color:var(--text-primary)">Information collected automatically:</strong></p>
+        <ul>
+          <li>Game statistics — total games played, wins, win streak</li>
+          <li>Coins balance and XP level</li>
+          <li>Device type and operating system version (for crash reporting)</li>
+          <li>Firebase Analytics events (anonymous usage data)</li>
+        </ul>
+        <p style="margin-top:12px"><strong style="color:var(--text-primary)">Information we do NOT collect:</strong></p>
+        <ul>
+          <li>Location data</li>
+          <li>Contacts or phone book</li>
+          <li>Camera or microphone data</li>
+          <li>Payment or financial information</li>
+        </ul>
+      </div>
+    </section>
+
+    <section>
+      <h2><span class="num">2</span> How We Use Your Information</h2>
+      <div class="card">
+        <ul>
+          <li>To create and manage your player account</li>
+          <li>To save and sync your game progress and statistics across devices</li>
+          <li>To display your username and avatar in gameplay</li>
+          <li>To authenticate you securely via Firebase Auth</li>
+          <li>To improve app performance and fix bugs using crash reports</li>
+          <li>To provide customer support when you contact us</li>
+        </ul>
+        <p style="margin-top:8px">We do <strong style="color:var(--text-primary)">not</strong> sell, trade, or rent your personal information to any third parties.</p>
+      </div>
+    </section>
+
+    <section>
+      <h2><span class="num">3</span> Firebase & Google Services</h2>
+      <div class="card">
+        <p>Ludo Elite uses the following Google / Firebase services:</p>
+        <ul>
+          <li><strong style="color:var(--text-primary)">Firebase Authentication</strong> — secure login via email or Google account</li>
+          <li><strong style="color:var(--text-primary)">Cloud Firestore</strong> — stores your profile data and game statistics</li>
+          <li><strong style="color:var(--text-primary)">Firebase Analytics</strong> — anonymous usage analytics to improve the app</li>
+        </ul>
+        <p style="margin-top:8px">These services are governed by <a href="https://policies.google.com/privacy" target="_blank">Google's Privacy Policy</a>.</p>
+      </div>
+    </section>
+
+    <section>
+      <h2><span class="num">4</span> Data Storage & Security</h2>
+      <div class="card">
+        <ul>
+          <li>Your data is stored securely on Google Firebase servers</li>
+          <li>Local game data is stored on your device via SharedPreferences</li>
+          <li>We use industry-standard encryption for data in transit (HTTPS/TLS)</li>
+          <li>Access to your data is restricted to authorised personnel only</li>
+          <li>We retain your data as long as your account is active</li>
+        </ul>
+      </div>
+    </section>
+
+    <section>
+      <h2><span class="num">5</span> Children's Privacy</h2>
+      <div class="card">
+        <p>Ludo Elite is suitable for all ages. We do not knowingly collect personal information from children under 13 without verifiable parental consent. If you believe a child under 13 has provided us with personal information, please contact us and we will delete it promptly.</p>
+      </div>
+    </section>
+
+    <section>
+      <h2><span class="num">6</span> Your Rights</h2>
+      <div class="card">
+        <p>You have the right to:</p>
+        <ul>
+          <li>Access the personal data we hold about you</li>
+          <li>Request correction of inaccurate data</li>
+          <li>Request deletion of your account and all associated data</li>
+          <li>Withdraw consent for data processing at any time</li>
+          <li>Export your data in a portable format</li>
+        </ul>
+        <p style="margin-top:8px">To exercise any of these rights, contact us at the email below.</p>
+      </div>
+    </section>
+
+    <section>
+      <h2><span class="num">7</span> Account Deletion</h2>
+      <div class="card">
+        <p>You can delete your account and all associated data at any time by:</p>
+        <ul>
+          <li>Going to Profile → Settings → Delete Account within the app</li>
+          <li>Emailing us at <a href="mailto:privacy@crowcent.com">privacy@crowcent.com</a> with subject "Delete My Account"</li>
+        </ul>
+        <p style="margin-top:8px">Account deletion is permanent and cannot be undone. All game data, statistics, and profile information will be permanently removed within 30 days.</p>
+      </div>
+    </section>
+
+    <section>
+      <h2><span class="num">8</span> Third-Party Links</h2>
+      <div class="card">
+        <p>Ludo Elite may contain links to third-party websites or services. We are not responsible for the privacy practices of those third parties. We encourage you to review their privacy policies before providing any personal information.</p>
+      </div>
+    </section>
+
+    <section>
+      <h2><span class="num">9</span> Changes to This Policy</h2>
+      <div class="card">
+        <p>We may update this Privacy Policy from time to time. When we make changes, we will update the effective date at the top of this page. Continued use of Ludo Elite after changes constitutes acceptance of the revised policy. We encourage you to review this page periodically.</p>
+      </div>
+    </section>
+
+    <div class="contact-box">
+      <h3>Questions or Concerns?</h3>
+      <p>If you have any questions about this Privacy Policy or how we handle your data, please reach out to us.</p>
+      <a href="mailto:privacy@crowcent.com" class="email-link">privacy@crowcent.com</a>
+    </div>
+
+  </main>
+
+  <footer>
+    © 2026 <span>Crowcent</span>. Ludo Elite — All Rights Reserved.<br/>
+    Package: com.clikmagnet.ludo_game · Firebase Project: ludo-elite-gautam
+  </footer>
+
+</body>
+</html>
